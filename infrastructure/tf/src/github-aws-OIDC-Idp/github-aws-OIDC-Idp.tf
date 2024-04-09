@@ -17,7 +17,7 @@ resource "aws_iam_role_policy_attachment" "github_actions_admin_access_attach" {
 
 data "aws_iam_policy_document" "assume_role_policy" {
     statement {
-      actions = ["sts:AssumedRoleWithWebIdnetity"]
+      actions = ["sts:AssumeRoleWithWebIdentity"]
       effect  = "Allow"
       principals {
         type        =  "Federated"
