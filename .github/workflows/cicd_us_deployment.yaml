@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     path:
-    - 'infrastructure/tf/sr/**'
+    - 'infrastructure/tf/src/**'
     - '.github/workflows/cicd_us_deployment.yaml'
 
 env:
@@ -40,6 +40,8 @@ jobs:
           sudo apt-get install build-essential
           make install_python_deps
 
-      - name: AWS STS GetCallerIdentity
+      - name: AWS STS GetCallerIdentity and Init, Apply Terraform
         run: |
           aws sts get-caller-identity
+          make init
+          make apply
