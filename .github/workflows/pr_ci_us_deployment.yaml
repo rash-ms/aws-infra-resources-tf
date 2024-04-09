@@ -1,4 +1,4 @@
-# The purpose of this workflow is to validate that unit tests can successfully complete during a pull request
+# The purpose of this workflow is to validate unit testing on pull request
 name: pr_ci_us_deployment
 on:
   pull_request:
