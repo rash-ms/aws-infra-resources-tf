@@ -1,6 +1,6 @@
 module "github-aws-Idp" {
   source             = "../github-aws-OIDC-Idp"
-  github-action-name = "GithubActionsRoles-Test"
+  github-action-name = "GitHubAction-AssumeRoleWithAction"
   github-action-role-tags = {
     RoleWorkspace-0 = "stg"
     RoleWorkspace-1 = "dev"
