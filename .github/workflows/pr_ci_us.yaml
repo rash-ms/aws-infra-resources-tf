@@ -1,11 +1,11 @@
 # The purpose of this workflow is to validate that unit tests can successfully complete during a pull request
-name: prci_us_deployment
+name: pr_ci_us
 on:
   pull_request:
     branches: [ main ]
     paths:
       - 'infrastructure/tf/src/**'
-      - '.github/workflows/prci_us_deployment.yaml'
+      - '.github/workflows/pr_ci_us.yaml'
 
 jobs:
   test:

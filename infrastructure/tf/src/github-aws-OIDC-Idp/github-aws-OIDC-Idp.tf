@@ -25,23 +25,17 @@ data "aws_iam_policy_document" "assume_role_policy" {
       }
       condition {
         test     = "StringEquals"
-        variable = "token.actions.githubusercontent.com:sub"
-        values   = [var.github-repository]
-
-      }
-      condition {
-        test     = "StringLike"
         variable = "token.actions.githubusercontent.com:aud"
         values   = ["sts.amazonaws.com"]
       }
+      condition {
+        test     = "StringLike"
+        variable = "token.actions.githubusercontent.com:sub"
+        values   = ["repo:rash-ms/*"]
+
+      }
     }
 }
-
-# variable "oidc-client-id-list" {
-#   description = "List of client IDs for the OIDC provider"
-#   type        = list(string)
-#   default     = ["sts.amazonaws.com"]
-# }
 
 variable "github-action-name" {
   description = "The name for the GitHub Actions IAM role"
@@ -53,8 +47,8 @@ variable "github-action-role-tags" {
   type        = map(string)
 }
 
-variable "github-repository" {
-  description = "The GitHub repository in the format 'org/repo' to create an access policy for"
-  type        = string
-  default     = "rash-ms/*"
-}
+# variable "github-repository" {
+#   description = "The GitHub repository in the format 'org/repo' to create an access policy for"
+#   type        = string
+#   default     = "rash-ms/*"
+# }
