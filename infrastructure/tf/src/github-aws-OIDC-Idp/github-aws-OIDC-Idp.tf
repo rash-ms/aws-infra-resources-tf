@@ -46,9 +46,3 @@ variable "github-action-role-tags" {
   description = "A map of tags to assign to the role"
   type        = map(string)
 }
-
-# variable "github-repository" {
-#   description = "The GitHub repository in the format 'org/repo' to create an access policy for"
-#   type        = string
-#   default     = "rash-ms/*"
-# }
