@@ -1,10 +1,11 @@
-name: Connect to an AWS role from a Github repository
+name: cicd_us_deployment
 
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
+    path:
+    - 'infrastructure/tf/sr/**'
+    - '.github/workflows/cicd_us_deployment.yaml'
 
 env:
     AWS_REGION: us-east-1
@@ -13,20 +14,32 @@ permissions:
     id-token: write
     contents: read
 jobs:
-  AssumeRoleAndCallIdentity:
+  build:
+    if: "!contains(github.event.head_commit.message, 'skip ci')"
     runs-on: ubuntu-latest
     steps:
       - name: Git clone the repository
         uses: actions/checkout@v3
 
-      - name: configure aws credentials
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1.3.2
+        with:
+          terraform_version: 1.0.7
+
+      - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1.7.0
         with:
           role-to-assume: arn:aws:iam::637423205666:role/GitHubAction-AssumeRoleWithAction
           role-session-name: Github_to_AWS_Via_FederatedOIDC
           aws-region: ${{ env.AWS_REGION }}
+
       # Hello from AWS: WhoAmI
-      - name: Sts GetCallerIdentity
+      - name: Install CI Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install build-essential
+          make install_python_deps
+
+      - name: AWS STS GetCallerIdentity
         run: |
           aws sts get-caller-identity
-          
