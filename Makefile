@@ -27,6 +27,9 @@ init_remove:
 init:
 	cd ./infrastructure/tf/src/project-client && terraform init -upgrade
 
+plan:
+	cd ./infrastructure/tf/src/project-client && terraform plan
+
 tf_lint_with_write:		
 		terraform fmt -recursive -diff=true -write=true .infrastructure/tf/src
 
