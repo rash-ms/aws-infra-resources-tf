@@ -1,13 +1,26 @@
+# terraform {
+#   required_version = ">=v0.14.7"
+# }
+
+# provider "aws" {
+#   region = "us-east-1"
+# }
+
+# resource "aws_s3_bucket" "backend" {
+#   bucket = "ms-data-infra-backend"
+#   tags = {
+#     ManagedBy = "Terraform"
+#   }
+# }
+
+# resource "aws_s3_bucket_acl" "backend_acl" {
+#   bucket = aws_s3_bucket.backend.id
+#   acl    = "private"
+# }
+
+
 terraform {
   required_version = ">= 0.14.7"
-  
-  backend "s3" {
-    bucket         = "ms-data-infra-backend"   
-    key            = "terraform.tfstate"       
-    region         = "us-east-1"               
-    encrypt        = true                      
-    dynamodb_table = "terraform_locks"         
-  }
 }
 
 provider "aws" {
@@ -16,8 +29,6 @@ provider "aws" {
 
 resource "aws_s3_bucket" "backend" {
   bucket = "ms-data-infra-backend"
-  acl    = "private"
-
   tags = {
     ManagedBy = "Terraform"
   }
