@@ -29,7 +29,7 @@
 #       - name: Configure AWS credentials
 #         uses: aws-actions/configure-aws-credentials@v1.7.0
 #         with:
-#           role-to-assume: arn:aws:iam::637423205666:role/GitHubAction-AssumeRoleWithAction
+#           role-to-assume: arn:aws:iam::637423205666:role/GitHubAction-AssumeRole
 #           role-session-name: Github_to_AWS_Via_FederatedOIDC
 #           aws-region: ${{ env.AWS_REGION }}
 
