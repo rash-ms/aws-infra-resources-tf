@@ -1,5 +1,5 @@
 resource "aws_iam_openid_connect_provider" "github_oidc" {
-    client_id_list  =   var.oidc-client-id-list
+    client_id_list  =   ["sts.amazonaws.com"]
     thumbprint_list =   ["1b511abead59c6ce207077c0bf0e0043b1382612"]
     url             =   "https://token.actions.githubusercontent.com"
 }
@@ -36,11 +36,11 @@ data "aws_iam_policy_document" "assume_role_policy" {
     }
 }
 
-variable "oidc-client-id-list" {
-  description = "List of client IDs for the OIDC provider"
-  type        = list(string)
-  default     = ["sts.amazonaws.com"]
-}
+# variable "oidc-client-id-list" {
+#   description = "List of client IDs for the OIDC provider"
+#   type        = list(string)
+#   default     = ["sts.amazonaws.com"]
+# }
 
 variable "github-action-name" {
   description = "The name for the GitHub Actions IAM role"
