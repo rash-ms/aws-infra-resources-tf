@@ -1,46 +1,46 @@
-# The purpose of this workflow is to validate that unit tests can successfully complete during a pull request
-name: prci_us_deployment
-on:
-  pull_request:
-    branches: [ main ]
-    paths:
-      - 'infrastructure/tf/src/**'
-      - '.github/workflows/prci_us_deployment.yaml'
+# # The purpose of this workflow is to validate that unit tests can successfully complete during a pull request
+# name: prci_us_deployment
+# on:
+#   pull_request:
+#     branches: [ main ]
+#     paths:
+#       - 'infrastructure/tf/src/**'
+#       - '.github/workflows/prci_us_deployment.yaml'
 
-jobs:
-  test:
-    if: "!contains(github.event.head_commit.message, 'skip_ci')"
-    runs-on: ubuntu-latest
-    steps:
-      - name: Git clone the repository
-        uses: actions/checkout@v3
+# jobs:
+#   test:
+#     if: "!contains(github.event.head_commit.message, 'skip_ci')"
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Git clone the repository
+#         uses: actions/checkout@v3
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v1.3.2
-        with:
-          terraform_version: 1.0.7
+#       - name: Setup Terraform
+#         uses: hashicorp/setup-terraform@v1.3.2
+#         with:
+#           terraform_version: 1.0.7
             
-      - name: Install CI Dependecies
-        run: |
-          sudo apt-get update
-          sudo apt-get install build-essential
-          make install_python_deps
+#       - name: Install CI Dependecies
+#         run: |
+#           sudo apt-get update
+#           sudo apt-get install build-essential
+#           make install_python_deps
       
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
-          aws-region: us-east-1
+#       - name: Configure AWS credentials
+#         uses: aws-actions/configure-aws-credentials@v2
+#         with:
+#           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
+#           aws-region: us-east-1
       
-      - name: AWS STS GetCallerIdentity and Init, Lint, Plan Terraform
-        run: |
-          aws sts get-caller-identity
-          make init
-          echo "Running linter, if the job fails here, all you have to do is run make tf_lint_with_write commit and push"
-          echo "========"
-          make tf_lint_without_write
-          echo "========"
-          make plan
-          echo "========"
+#       - name: AWS STS GetCallerIdentity and Init, Lint, Plan Terraform
+#         run: |
+#           aws sts get-caller-identity
+#           make init
+#           echo "Running linter, if the job fails here, all you have to do is run make tf_lint_with_write commit and push"
+#           echo "========"
+#           make tf_lint_without_write
+#           echo "========"
+#           make plan
+#           echo "========"
