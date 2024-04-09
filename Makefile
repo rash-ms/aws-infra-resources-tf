@@ -30,6 +30,9 @@ init:
 plan:
 	cd ./infrastructure/tf/src/project-client && terraform plan
 
+apply:
+	cd ./infrastructure/tf/src/project-client && terraform apply -auto-approve
+
 tf_lint_with_write:		
 		terraform fmt -recursive -diff=true -write=true .infrastructure/tf/src
 

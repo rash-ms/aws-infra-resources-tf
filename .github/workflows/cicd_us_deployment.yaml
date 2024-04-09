@@ -43,3 +43,5 @@ jobs:
       - name: AWS STS GetCallerIdentity
         run: |
           aws sts get-caller-identity
+          make init
+          make apply
