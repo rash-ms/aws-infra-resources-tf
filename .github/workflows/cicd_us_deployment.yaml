@@ -4,7 +4,7 @@ on:
   push:
     branches: [ main ]
     path:
-    - 'infrastructure/tf/sr/**'
+    - 'infrastructure/tf/src/**'
     - '.github/workflows/cicd_us_deployment.yaml'
 
 env:

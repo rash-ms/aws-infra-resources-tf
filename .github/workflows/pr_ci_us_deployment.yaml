@@ -4,7 +4,7 @@ on:
   pull_request:
     branches: [ main ]
     paths:
-      - 'infrastructure/tf/source/**'
+      - 'infrastructure/tf/src/**'
       - '.github/workflows/pr_ci_us_deployment.yaml'
 
 env:
