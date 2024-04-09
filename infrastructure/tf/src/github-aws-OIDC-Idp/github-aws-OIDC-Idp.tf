@@ -1,6 +1,6 @@
 resource "aws_iam_openid_connect_provider" "github_oidc" {
     client_id_list  =   var.oidc-client-id-list
-    thumbprint_list =   ["938fd4d98bab03faadb97b34396831e3780aea1"]
+    thumbprint_list =   ["1b511abead59c6ce207077c0bf0e0043b1382612"]
     url             =   "https://token.actions.githubusercontent.com"
 }
 
