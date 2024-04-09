@@ -5,7 +5,7 @@
 #     branches: [ main ]
 #     paths:
 #       - 'infrastructure/tf/src/**'
-#       - '.github/workflows/pr_ci_us.yaml'
+#       - '.github/workflows/_pr_ci_us.yaml'
 
 # jobs:
 #   test:
