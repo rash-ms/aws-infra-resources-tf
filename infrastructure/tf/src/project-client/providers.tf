@@ -8,8 +8,6 @@ terraform {
   backend "s3" {
     bucket         = "ms-data-infra-backend"
     key            = "terraform/complete-state"
-    region         = "us-east-1"
-    encrypt        = true                      
-    dynamodb_table = "terraform_locks"  
+    region         = "us-east-1"                
   }
 }
