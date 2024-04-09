@@ -1,5 +1,4 @@
 name: ci_cd_us_deployment
-
 on:
   push:
     branches: [ main ]
@@ -11,18 +10,27 @@ jobs:
     if: "!contains(github.event.head_commit.message, 'skip ci')"
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: hashicorp/setup-terraform@v1.3.2
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v1.3.2
         with:
           terraform_version: 1.0.7
+
       - name: Install CI Deps
         run: |
           sudo apt-get install build-essential
           make install_python_deps
-      - name:  Apply Terraform and Sync Databricks IAM
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          
+      - name: Initialize and Apply Terraform
         run: |
           make init
           make apply
