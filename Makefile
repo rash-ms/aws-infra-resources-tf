@@ -24,6 +24,9 @@ apply_backend:
 init_remove:
 		cd ./infrastructure/tf/src/project-client/tf-s3-backend && rm -dfr ./.terraform
 
+init:
+	cd ./infrastructure/tf/src/project-client && terraform init -upgrade
+
 tf_lint_with_write:		
 		terraform fmt -recursive -diff=true -write=true .infrastructure/tf/src
 

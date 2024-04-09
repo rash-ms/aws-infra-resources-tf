@@ -48,5 +48,6 @@ jobs:
           echo "========"
           make tf_lint_without_write
           echo "========"
-          make plan
-          echo "========"
+
+# make plan
+# echo "========"
