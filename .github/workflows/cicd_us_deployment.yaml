@@ -40,7 +40,7 @@ jobs:
           sudo apt-get install build-essential
           make install_python_deps
 
-      - name: AWS STS GetCallerIdentity
+      - name: AWS STS GetCallerIdentity and Init, Apply Terraform
         run: |
           aws sts get-caller-identity
           make init

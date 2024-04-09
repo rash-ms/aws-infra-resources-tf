@@ -46,6 +46,10 @@ jobs:
           make init
           echo "Running linter, if the job fails here, all you have to do is run make tf_lint_with_write commit and push"
           echo "========"
+          make init_backend
+          echo "========"
+          make apply_backend
+          echo "========"
           make tf_lint_without_write
           echo "========"
           make plan
