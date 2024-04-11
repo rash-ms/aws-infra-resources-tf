@@ -1,35 +1,35 @@
-name: Deploy Terraform
+# name: Deploy Terraform
 
-on:
-  push:
-    branches:
-      - main
+# on:
+#   push:
+#     branches:
+#       - main
 
-jobs:
-  deploy:
-    runs-on: ubuntu-latest
+# jobs:
+#   deploy:
+#     runs-on: ubuntu-latest
 
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v2
+#     steps:
+#       - name: Checkout code
+#         uses: actions/checkout@v2
 
-      - name: Read JSON files and export as environment variables
-        run: |
-          export PEOPLE_PROD=$(cat evergreen-us/people-prod.json)
-          export PEOPLE_STG=$(cat evergreen-us/people-stg.json)
-          export PEOPLE_DEV=$(cat evergreen-us/people-dev.json)
+#       - name: Read JSON files and export as environment variables
+#         run: |
+#           export PEOPLE_PROD=$(cat evergreen-us/people-prod.json)
+#           export PEOPLE_STG=$(cat evergreen-us/people-stg.json)
+#           export PEOPLE_DEV=$(cat evergreen-us/people-dev.json)
 
-      - name: Initialize Terraform
-        run: terraform init
+#       - name: Initialize Terraform
+#         run: terraform init
 
-      - name: Apply Terraform changes for production
-        if: github.ref == 'refs/heads/main'
-        run: terraform apply -var "PEOPLE_PROD=${PEOPLE_PROD}"
+#       - name: Apply Terraform changes for production
+#         if: github.ref == 'refs/heads/main'
+#         run: terraform apply -var "PEOPLE_PROD=${PEOPLE_PROD}"
 
-      - name: Apply Terraform changes for staging
-        if: github.ref == 'refs/heads/staging'
-        run: terraform apply -var "PEOPLE_STG=${PEOPLE_STG}"
+#       - name: Apply Terraform changes for staging
+#         if: github.ref == 'refs/heads/staging'
+#         run: terraform apply -var "PEOPLE_STG=${PEOPLE_STG}"
 
-      - name: Apply Terraform changes for development
-        if: github.ref == 'refs/heads/development'
-        run: terraform apply -var "PEOPLE_DEV=${PEOPLE_DEV}"
+#       - name: Apply Terraform changes for development
+#         if: github.ref == 'refs/heads/development'
+#         run: terraform apply -var "PEOPLE_DEV=${PEOPLE_DEV}"
