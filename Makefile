@@ -7,6 +7,7 @@
 # </Special Targets>
 
 python_exec=$(shell command -v python3)
+
 # <Recipes>
 
 TERRAFORM_DIR = ./aws-deployment-workspace
@@ -18,30 +19,33 @@ set_env:
 		@echo execute eval $(saml2aws script)
 
 init_backend:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && terraform init -upgrade
+		cd ${TERRAFORM_DIR}/s3-backend && terraform init -upgrade
 
 apply_backend:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && terraform apply
+		cd ${TERRAFORM_DIR}/s3-backend && terraform apply
 
 init_remove:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && rm -dfr ./.terraform
+		cd ${TERRAFORM_DIR}/s3-backend && rm -dfr ./.terraform
 
-init:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform init -upgrade
+# General init, plan, apply, etc. for specific Terraform directories
 
-plan:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform plan
+init_s3:
+		cd ${TERRAFORM_DIR} && terraform init -upgrade
 
-apply:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform apply -auto-approve
+plan_s3:
+		cd ${TERRAFORM_DIR} && terraform plan
 
+apply_s3:
+		cd ${TERRAFORM_DIR} && terraform apply -auto-approve
+
+# Linting for Terraform
 tf_lint_with_write:		
-		terraform fmt -recursive -diff=true -write=true ./infrastructure/tf/src
+		terraform fmt -recursive -diff=true -write=true ./aws-data-infrastructure
 
 tf_lint_without_write:
-		terraform fmt -recursive -diff=true -write=false ./infrastructure/tf/src
+		terraform fmt -recursive -diff=true -write=false ./aws-data-infrastructure
 
+# Python dependencies installation
 install_python_deps:
 	${python_exec} -m pip install --upgrade pip
 	pip install -r ./scripts/temp_setup_scripts/requirements.txt
-

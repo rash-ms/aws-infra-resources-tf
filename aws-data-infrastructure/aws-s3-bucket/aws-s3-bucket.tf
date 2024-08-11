@@ -1,5 +1,5 @@
 locals {
-  bucket_config = yamldecode(file("../../aws-data-infrastructure/aws-s3-bucket/us/us-workspace-s3-buckets.yaml"))
+  bucket_config = yamldecode(file("../aws-data-infrastructure/aws-s3-bucket-yaml/us/us-workspace-s3-buckets.yaml"))
 }
 
 # Flatten the configuration to create a unique key for each bucket/environment pair
