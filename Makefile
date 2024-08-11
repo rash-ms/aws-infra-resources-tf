@@ -21,22 +21,33 @@ set_env:
 init_backend:
 		cd ${TERRAFORM_DIR}/s3-backend && terraform init -upgrade
 
+plan_backend:
+		cd $(TERRAFORM_DIR)/s3-backend && terraform plan
+
 apply_backend:
 		cd ${TERRAFORM_DIR}/s3-backend && terraform apply
 
-init_remove:
-		cd ${TERRAFORM_DIR}/s3-backend && rm -dfr ./.terraform
 
-# General init, plan, apply, etc. for specific Terraform directories
-
-init_s3:
+init:
 		cd ${TERRAFORM_DIR} && terraform init -upgrade
 
-plan_s3:
-		cd ${TERRAFORM_DIR} && terraform plan
+plan:
+		cd $(TERRAFORM_DIR) && terraform plan
 
-apply_s3:
+apply:
 		cd ${TERRAFORM_DIR} && terraform apply -auto-approve
+
+init_remove:
+		cd ${TERRAFORM_DIR} && rm -dfr ./.terraform
+
+destroy:
+		cd $(TERRAFORM_DIR) && terraform destroy -auto-approve
+
+init_remove:
+		cd $(TERRAFORM_DIR) && rm -dfr ./.terraform
+
+destroy:
+		cd $(TERRAFORM_DIR) && terraform destroy
 
 # Linting for Terraform
 tf_lint_with_write:		
