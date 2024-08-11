@@ -1,3 +1,19 @@
+provider "aws" {
+  alias  = "dev"
+  region = "us-east-1"
+  assume_role {
+    role_arn = "arn:aws:iam::022499035568:role/byt-internal-workspace-dev-role"
+  }
+}
+
+provider "aws" {
+  alias  = "prod"
+  region = "us-east-1"
+  assume_role {
+    role_arn = "arn:aws:iam::022499035568:role/byt-internal-workspace-prod-role"
+  }
+}
+
 locals {
   bucket_config = yamldecode(file("../aws-data-infrastructure/aws-s3-bucket-yaml/us/us-workspace-s3-buckets.yaml"))
 }
@@ -16,7 +32,7 @@ locals {
   ])
 }
 
-resource "aws_s3_bucket" "my_buckets" {
+resource "aws_s3_bucket" "s3_buckets" {
   for_each = { for pair in local.bucket_environment_pairs : "${pair.bucket_name}-${pair.environment}" => pair }
 
   provider = each.value.environment == "dev" ? aws.dev : aws.prod
