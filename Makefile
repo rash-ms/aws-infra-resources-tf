@@ -7,7 +7,10 @@
 # </Special Targets>
 
 python_exec=$(shell command -v python3)
+
 # <Recipes>
+
+TERRAFORM_DIR = ./aws-deployment-workspace
 
 auth:
 		saml2aws login
@@ -16,30 +19,44 @@ set_env:
 		@echo execute eval $(saml2aws script)
 
 init_backend:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && terraform init -upgrade
+		cd ${TERRAFORM_DIR}/s3-backend && terraform init -upgrade
+
+plan_backend:
+		cd $(TERRAFORM_DIR)/s3-backend && terraform plan
 
 apply_backend:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && terraform apply
+		cd ${TERRAFORM_DIR}/s3-backend && terraform apply
 
-init_remove:
-		cd ./infrastructure/tf/src/tf_resources_module/tf-s3-backend && rm -dfr ./.terraform
 
 init:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform init -upgrade
+		cd ${TERRAFORM_DIR} && terraform init -upgrade
 
 plan:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform plan
+		cd $(TERRAFORM_DIR) && terraform plan
 
 apply:
-	cd ./infrastructure/tf/src/tf_resources_module && terraform apply -auto-approve
+		cd ${TERRAFORM_DIR} && terraform apply -auto-approve
 
+init_remove:
+		cd ${TERRAFORM_DIR} && rm -dfr ./.terraform
+
+destroy:
+		cd $(TERRAFORM_DIR) && terraform destroy -auto-approve
+
+init_remove:
+		cd $(TERRAFORM_DIR) && rm -dfr ./.terraform
+
+destroy:
+		cd $(TERRAFORM_DIR) && terraform destroy
+
+# Linting for Terraform
 tf_lint_with_write:		
-		terraform fmt -recursive -diff=true -write=true ./infrastructure/tf/src
+		terraform fmt -recursive -diff=true -write=true ./aws-data-infrastructure
 
 tf_lint_without_write:
-		terraform fmt -recursive -diff=true -write=false ./infrastructure/tf/src
+		terraform fmt -recursive -diff=true -write=false ./aws-data-infrastructure
 
+# Python dependencies installation
 install_python_deps:
 	${python_exec} -m pip install --upgrade pip
 	pip install -r ./scripts/temp_setup_scripts/requirements.txt
-
