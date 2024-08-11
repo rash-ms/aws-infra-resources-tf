@@ -1,0 +1,6 @@
+test:
+  region: 'us-east-1'
+  project-environment: ["dev", "prod"]
+  project-team-names:
+    - 'data-eng-us'
+

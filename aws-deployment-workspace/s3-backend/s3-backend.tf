@@ -7,7 +7,7 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "backend" {
-  bucket = "ms-infra-resources-backend"
+  bucket = "byt-infra-resources-backend" 
   tags = {
     ManagedBy = "Terraform"
   }
