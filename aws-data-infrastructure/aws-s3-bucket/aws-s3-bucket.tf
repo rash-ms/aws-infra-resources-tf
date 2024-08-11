@@ -15,7 +15,8 @@ provider "aws" {
 }
 
 locals {
-  bucket_config = yamldecode(file("./aws-s3-bucket-yaml/us/us-workspace-s3-buckets.yaml"))
+  # bucket_config = yamldecode(file("./aws-s3-bucket-yaml/us/us-workspace-s3-buckets.yaml"))
+  bucket_config = yamldecode(file("${path.module}/aws-s3-bucket-yaml/us/us-workspace-s3-buckets.yaml"))
 }
 
 locals {
