@@ -179,18 +179,18 @@ resource "aws_api_gateway_stage" "shopify_flow_stage_logs" {
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
 
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.shopify_flow_api_gateway_logs.arn
-    format = jsonencode({
-      "requestId"      = "$context.requestId",
-      "ip"             = "$context.identity.sourceIp",
-      "requestTime"    = "$context.requestTime",
-      "domainName"     = "$context.domainName",
-      "httpMethod"     = "$context.httpMethod",
-      "routeKey"       = "$context.routeKey",
-      "status"         = "$context.status",
-      "protocol"       = "$context.protocol",
-      "responseLength" = "$context.responseLength"
-    })
-  }
+  # access_log_settings {
+  #   destination_arn = aws_cloudwatch_log_group.shopify_flow_api_gateway_logs.arn
+  #   format = jsonencode({
+  #     "requestId"      = "$context.requestId",
+  #     "ip"             = "$context.identity.sourceIp",
+  #     "requestTime"    = "$context.requestTime",
+  #     "domainName"     = "$context.domainName",
+  #     "httpMethod"     = "$context.httpMethod",
+  #     "routeKey"       = "$context.routeKey",
+  #     "status"         = "$context.status",
+  #     "protocol"       = "$context.protocol",
+  #     "responseLength" = "$context.responseLength"
+  #   })
+  # }
 }
