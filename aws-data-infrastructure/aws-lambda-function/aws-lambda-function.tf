@@ -84,7 +84,7 @@ resource "aws_apigatewayv2_api" "shopify_flow_http_api" {
 }
 
 resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
-    name = "aws/apigateway/shopify_flow_http_api"
+    name = "/aws/apigateway/shopify_flow_http_api"
     retention_in_days = 7
 }
 
