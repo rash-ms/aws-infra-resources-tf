@@ -83,19 +83,13 @@ resource "aws_api_gateway_rest_api" "shopify_flow_rest_api" {
   description = "REST API for Shopify Flow integration"
 }
 
-# Define a resource for "/subscriptions"
-resource "aws_api_gateway_resource" "subscriptions" {
-  rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
-  path_part   = "subscriptions"
-}
-
-# Define a nested resource for "/subscriptions/contract"
+# Define a single resource for "/contract" under the root resource
 resource "aws_api_gateway_resource" "contract" {
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  parent_id   = aws_api_gateway_resource.subscriptions.id
+  parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
   path_part   = "contract"
 }
+
 
 # Define GET method on "/subscriptions/contract"
 resource "aws_api_gateway_method" "get_contract" {
@@ -151,12 +145,12 @@ resource "aws_api_gateway_deployment" "shopify_flow_deployment" {
   ]
 }
 
-# Create a single stage for the REST API deployment
-resource "aws_api_gateway_stage" "shopify_flow_stage" {
-  deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
-  rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  stage_name    = "subscriptions"  # Use "subscriptions" as the stage name
-}
+# # Create a single stage for the REST API deployment
+# resource "aws_api_gateway_stage" "shopify_flow_stage" {
+#   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
+#   rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+#   stage_name    = "subscriptions"  # Use "subscriptions" as the stage name
+# }
 
 # CloudWatch log group for API Gateway logs
 resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
@@ -165,7 +159,7 @@ resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
 }
 
 # Enable API Gateway logging for the stage
-resource "aws_api_gateway_stage" "shopify_flow_stage_with_logs" {
+resource "aws_api_gateway_stage" "shopify_flow_stage_logs" {
   stage_name = "subscriptions"
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
