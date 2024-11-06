@@ -99,19 +99,12 @@ resource "aws_api_gateway_rest_api" "shopify_flow_rest_api" {
   description = "REST API for Shopify Flow integration"
 }
 
-# # Define a single resource for "/contract" under the root resource
-# resource "aws_api_gateway_resource" "contract" {
-#   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-#   parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
-#   path_part   = "contract"
-# }
-
 
 resource "aws_api_gateway_resource" "contract" {
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
   path_part   = "contract"
-  depends_on  = [aws_api_gateway_rest_api.shopify_flow_rest_api]  # Ensures REST API is created first
+  depends_on  = [aws_api_gateway_rest_api.shopify_flow_rest_api]  
 }
 
 # Define GET method on "/subscriptions/contract"
