@@ -83,25 +83,32 @@ resource "aws_api_gateway_rest_api" "shopify_flow_rest_api" {
   description = "REST API for Shopify Flow integration"
 }
 
-# Define a resource ("/sub-contract")
-resource "aws_api_gateway_resource" "sub_contract" {
+# Define a resource for "/subscriptions"
+resource "aws_api_gateway_resource" "subscriptions" {
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
-  path_part   = "subscription-contract"
+  path_part   = "subscriptions"
 }
 
-# Define GET method on "/sub-contract"
-resource "aws_api_gateway_method" "get_sub_contract" {
+# Define a nested resource for "/subscriptions/contract"
+resource "aws_api_gateway_resource" "contract" {
+  rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  parent_id   = aws_api_gateway_resource.subscriptions.id
+  path_part   = "contract"
+}
+
+# Define GET method on "/subscriptions/contract"
+resource "aws_api_gateway_method" "get_contract" {
   rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.sub_contract.id
+  resource_id   = aws_api_gateway_resource.contract.id
   http_method   = "GET"
   authorization = "NONE"
 }
 
-# Define POST method on "/sub-contract"
-resource "aws_api_gateway_method" "post_sub_contract" {
+# Define POST method on "/subscriptions/contract"
+resource "aws_api_gateway_method" "post_contract" {
   rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.sub_contract.id
+  resource_id   = aws_api_gateway_resource.contract.id
   http_method   = "POST"
   authorization = "NONE"
 }
@@ -109,8 +116,8 @@ resource "aws_api_gateway_method" "post_sub_contract" {
 # Integration for GET method with Lambda
 resource "aws_api_gateway_integration" "lambda_get_integration" {
   rest_api_id             = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.sub_contract.id
-  http_method             = aws_api_gateway_method.get_sub_contract.http_method
+  resource_id             = aws_api_gateway_resource.contract.id
+  http_method             = aws_api_gateway_method.get_contract.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
@@ -119,8 +126,8 @@ resource "aws_api_gateway_integration" "lambda_get_integration" {
 # Integration for POST method with Lambda
 resource "aws_api_gateway_integration" "lambda_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.sub_contract.id
-  http_method             = aws_api_gateway_method.post_sub_contract.http_method
+  resource_id             = aws_api_gateway_resource.contract.id
+  http_method             = aws_api_gateway_method.post_contract.http_method
   integration_http_method = "POST"
   type                    = "AWS_PROXY"
   uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
@@ -144,11 +151,11 @@ resource "aws_api_gateway_deployment" "shopify_flow_deployment" {
   ]
 }
 
-# Create a stage for the REST API deployment
+# Create a single stage for the REST API deployment
 resource "aws_api_gateway_stage" "shopify_flow_stage" {
   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
   rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-  stage_name    = "prod"
+  stage_name    = "subscriptions"  # Use "subscriptions" as the stage name
 }
 
 # CloudWatch log group for API Gateway logs
@@ -157,9 +164,9 @@ resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
   retention_in_days = 7
 }
 
-# Configure API Gateway logging in the stage
+# Enable API Gateway logging for the stage
 resource "aws_api_gateway_stage" "shopify_flow_stage_with_logs" {
-  stage_name = "prod"
+  stage_name = "subscriptions"
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
 
@@ -178,8 +185,6 @@ resource "aws_api_gateway_stage" "shopify_flow_stage_with_logs" {
     })
   }
 }
-
-
 
 # # Create a lambda function
 # # In terraform ${path.module} is the current directory.
