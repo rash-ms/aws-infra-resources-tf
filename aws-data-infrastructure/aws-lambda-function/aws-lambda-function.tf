@@ -90,6 +90,7 @@ resource "aws_api_gateway_rest_api" "shopify_flow_rest_api" {
 #   path_part   = "contract"
 # }
 
+
 resource "aws_api_gateway_resource" "contract" {
   rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
@@ -150,13 +151,6 @@ resource "aws_api_gateway_deployment" "shopify_flow_deployment" {
     aws_api_gateway_integration.lambda_post_integration
   ]
 }
-
-# # Create a single stage for the REST API deployment
-# resource "aws_api_gateway_stage" "shopify_flow_stage" {
-#   deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
-#   rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
-#   stage_name    = "subscriptions"  # Use "subscriptions" as the stage name
-# }
 
 # CloudWatch log group for API Gateway logs
 resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
