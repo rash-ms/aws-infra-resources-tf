@@ -66,71 +66,186 @@ data "archive_file" "zip_the_python_code" {
  output_path = "${path.module}/python/lambda_handler.zip"
 }
 
-# Create a lambda function
-# In terraform ${path.module} is the current directory.
+
+# Lambda Function
 resource "aws_lambda_function" "shopify_flow_func" {
- filename                       = "${path.module}/python/lambda_handler.zip"
- function_name                  = "Jhooq-Lambda-Function"
- role                           = aws_iam_role.shopify_flow_api_role.arn
- handler                        = "lambda_handler.lambda_handler"
- runtime                        = "python3.8"
- depends_on                     = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
+  filename       = "${path.module}/python/lambda_handler.zip"
+  function_name  = "Jhooq-Lambda-Function"
+  role           = aws_iam_role.shopify_flow_api_role.arn
+  handler        = "lambda_handler.lambda_handler"
+  runtime        = "python3.8"
+  depends_on     = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
 }
 
-# Create API Gateway
-resource "aws_apigatewayv2_api" "shopify_flow_http_api" {
-  name          = "shopify_flow_http_api"
-  protocol_type = "HTTP"
+# REST API Gateway
+resource "aws_api_gateway_rest_api" "shopify_flow_rest_api" {
+  name        = "shopify_flow_rest_api"
+  description = "REST API for Shopify Flow integration"
 }
 
-resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
-    name = "/aws/apigateway/shopify_flow_http_api"
-    retention_in_days = 7
+# Define a resource ("/sub-contract")
+resource "aws_api_gateway_resource" "sub_contract" {
+  rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  parent_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.root_resource_id
+  path_part   = "subscription-contract"
 }
 
+# Define GET method on "/sub-contract"
+resource "aws_api_gateway_method" "get_sub_contract" {
+  rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  resource_id   = aws_api_gateway_resource.sub_contract.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+# Define POST method on "/sub-contract"
+resource "aws_api_gateway_method" "post_sub_contract" {
+  rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  resource_id   = aws_api_gateway_resource.sub_contract.id
+  http_method   = "POST"
+  authorization = "NONE"
+}
+
+# Integration for GET method with Lambda
+resource "aws_api_gateway_integration" "lambda_get_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  resource_id             = aws_api_gateway_resource.sub_contract.id
+  http_method             = aws_api_gateway_method.get_sub_contract.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
+}
+
+# Integration for POST method with Lambda
+resource "aws_api_gateway_integration" "lambda_post_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  resource_id             = aws_api_gateway_resource.sub_contract.id
+  http_method             = aws_api_gateway_method.post_sub_contract.http_method
+  integration_http_method = "POST"
+  type                    = "AWS_PROXY"
+  uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
+}
+
+# Lambda Permission for API Gateway to invoke the function
 resource "aws_lambda_permission" "api_gateway_invoke" {
   statement_id  = "AllowAPIGatewayInvoke"
   action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.shopify_flow_func.function_name
   principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_apigatewayv2_api.shopify_flow_http_api.execution_arn}/*"
+  source_arn    = "${aws_api_gateway_rest_api.shopify_flow_rest_api.execution_arn}/*"
 }
 
-resource "aws_apigatewayv2_integration" "shopify_flow_api_integration" {
-  api_id           = aws_apigatewayv2_api.shopify_flow_http_api.id
-  integration_type = "AWS_PROXY"
-  integration_uri  = aws_lambda_function.shopify_flow_func.invoke_arn
+# Deploy the API
+resource "aws_api_gateway_deployment" "shopify_flow_deployment" {
+  rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  depends_on = [
+    aws_api_gateway_integration.lambda_get_integration,
+    aws_api_gateway_integration.lambda_post_integration
+  ]
 }
 
-resource "aws_apigatewayv2_route" "shopify_flow_route_get" {
-  api_id    = aws_apigatewayv2_api.shopify_flow_http_api.id
-  route_key = "GET /sub-contract"
-  target    = "integrations/${aws_apigatewayv2_integration.shopify_flow_api_integration.id}"
+# Create a stage for the REST API deployment
+resource "aws_api_gateway_stage" "shopify_flow_stage" {
+  deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
+  rest_api_id   = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  stage_name    = "prod"
 }
 
-resource "aws_apigatewayv2_route" "shopify_flow_route_post" {
-  api_id    = aws_apigatewayv2_api.shopify_flow_http_api.id
-  route_key = "POST /sub-contract"
-  target    = "integrations/${aws_apigatewayv2_integration.shopify_flow_api_integration.id}"
+# CloudWatch log group for API Gateway logs
+resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
+  name              = "/aws/apigateway/shopify_flow_rest_api"
+  retention_in_days = 7
 }
 
-resource "aws_apigatewayv2_stage" "shopify_flow_stage" {
-  api_id      = aws_apigatewayv2_api.shopify_flow_http_api.id
-  name        = "$default"
-  auto_deploy = true
+# Configure API Gateway logging in the stage
+resource "aws_api_gateway_stage" "shopify_flow_stage_with_logs" {
+  stage_name = "prod"
+  rest_api_id = aws_api_gateway_rest_api.shopify_flow_rest_api.id
+  deployment_id = aws_api_gateway_deployment.shopify_flow_deployment.id
 
   access_log_settings {
-        destination_arn = aws_cloudwatch_log_group.shopify_flow_api_gateway_logs.arn
-        format = jsonencode({
-        "requestId"      = "$context.requestId",
-        "ip"             = "$context.identity.sourceIp",
-        "requestTime"    = "$context.requestTime",
-        "domainName"     = "$context.domainName",
-        "httpMethod"     = "$context.httpMethod",
-        "routeKey"       = "$context.routeKey",
-        "status"         = "$context.status",
-        "protocol"       = "$context.protocol",
-        "responseLength" = "$context.responseLength"
-        })
-    }
+    destination_arn = aws_cloudwatch_log_group.shopify_flow_api_gateway_logs.arn
+    format = jsonencode({
+      "requestId"      = "$context.requestId",
+      "ip"             = "$context.identity.sourceIp",
+      "requestTime"    = "$context.requestTime",
+      "domainName"     = "$context.domainName",
+      "httpMethod"     = "$context.httpMethod",
+      "routeKey"       = "$context.routeKey",
+      "status"         = "$context.status",
+      "protocol"       = "$context.protocol",
+      "responseLength" = "$context.responseLength"
+    })
+  }
 }
+
+
+
+# # Create a lambda function
+# # In terraform ${path.module} is the current directory.
+# resource "aws_lambda_function" "shopify_flow_func" {
+#  filename                       = "${path.module}/python/lambda_handler.zip"
+#  function_name                  = "Jhooq-Lambda-Function"
+#  role                           = aws_iam_role.shopify_flow_api_role.arn
+#  handler                        = "lambda_handler.lambda_handler"
+#  runtime                        = "python3.8"
+#  depends_on                     = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
+# }
+
+# # Create API Gateway
+# resource "aws_apigatewayv2_api" "shopify_flow_http_api" {
+#   name          = "shopify_flow_http_api"
+#   protocol_type = "HTTP"
+# }
+
+# resource "aws_cloudwatch_log_group" "shopify_flow_api_gateway_logs" {
+#     name = "/aws/apigateway/shopify_flow_http_api"
+#     retention_in_days = 7
+# }
+
+# resource "aws_lambda_permission" "api_gateway_invoke" {
+#   statement_id  = "AllowAPIGatewayInvoke"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.shopify_flow_func.function_name
+#   principal     = "apigateway.amazonaws.com"
+#   source_arn    = "${aws_apigatewayv2_api.shopify_flow_http_api.execution_arn}/*"
+# }
+
+# resource "aws_apigatewayv2_integration" "shopify_flow_api_integration" {
+#   api_id           = aws_apigatewayv2_api.shopify_flow_http_api.id
+#   integration_type = "AWS_PROXY"
+#   integration_uri  = aws_lambda_function.shopify_flow_func.invoke_arn
+# }
+
+# resource "aws_apigatewayv2_route" "shopify_flow_route_get" {
+#   api_id    = aws_apigatewayv2_api.shopify_flow_http_api.id
+#   route_key = "GET /sub-contract"
+#   target    = "integrations/${aws_apigatewayv2_integration.shopify_flow_api_integration.id}"
+# }
+
+# resource "aws_apigatewayv2_route" "shopify_flow_route_post" {
+#   api_id    = aws_apigatewayv2_api.shopify_flow_http_api.id
+#   route_key = "POST /sub-contract"
+#   target    = "integrations/${aws_apigatewayv2_integration.shopify_flow_api_integration.id}"
+# }
+
+# resource "aws_apigatewayv2_stage" "shopify_flow_stage" {
+#   api_id      = aws_apigatewayv2_api.shopify_flow_http_api.id
+#   name        = "$default"
+#   auto_deploy = true
+
+#   access_log_settings {
+#         destination_arn = aws_cloudwatch_log_group.shopify_flow_api_gateway_logs.arn
+#         format = jsonencode({
+#         "requestId"      = "$context.requestId",
+#         "ip"             = "$context.identity.sourceIp",
+#         "requestTime"    = "$context.requestTime",
+#         "domainName"     = "$context.domainName",
+#         "httpMethod"     = "$context.httpMethod",
+#         "routeKey"       = "$context.routeKey",
+#         "status"         = "$context.status",
+#         "protocol"       = "$context.protocol",
+#         "responseLength" = "$context.responseLength"
+#         })
+#     }
+# }
