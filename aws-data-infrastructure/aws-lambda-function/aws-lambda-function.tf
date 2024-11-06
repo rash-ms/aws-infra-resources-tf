@@ -1,22 +1,3 @@
-# resource "aws_iam_role" "shopify_flow_api_role" {
-#  name   = "shopify_flow_role"
-#  assume_role_policy = <<EOF
-# {
-#   "Version": "2012-10-17",
-#   "Statement": [
-#     {
-#       "Action": "sts:AssumeRole",
-#       "Principal": {
-#         "Service": "lambda.amazonaws.com"
-#       },
-#       "Effect": "Allow",
-#       "Sid": ""
-#     }
-#   ]
-# }
-# EOF
-# }
-
 resource "aws_iam_role" "shopify_flow_api_role" {
   name = "shopify_flow_role"
 
@@ -40,7 +21,6 @@ resource "aws_iam_role" "shopify_flow_api_role" {
     ]
   })
 }
-
 
 # IAM policy for logging from a lambda
 resource "aws_iam_policy" "shopify_flow_iam_policy" {
