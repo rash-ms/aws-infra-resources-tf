@@ -55,7 +55,7 @@ resource "aws_iam_policy" "shopify_flow_iam_policy" {
           "cloudwatch:List*",
           "cloudwatch:Describe*"
         ],
-        "Resource": "*"
+        "Resource": "arn:aws:logs:*:*:*"
       }
     ]
   })
@@ -68,10 +68,10 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 }
 
 # Configure API Gateway account settings to use the CloudWatch Logs role
-resource "aws_api_gateway_account" "api_gateway_account" {
-  cloudwatch_role_arn = aws_iam_role.shopify_flow_api_role.arn
-  depends_on          = [aws_iam_role.shopify_flow_api_role, aws_iam_policy.shopify_flow_iam_policy]
-}
+# resource "aws_api_gateway_account" "api_gateway_account" {
+#   cloudwatch_role_arn = aws_iam_role.shopify_flow_api_role.arn
+#   depends_on          = [aws_iam_role.shopify_flow_api_role, aws_iam_policy.shopify_flow_iam_policy]
+# }
 
 
 # Generates an archive from content, a file, or a directory of files.
