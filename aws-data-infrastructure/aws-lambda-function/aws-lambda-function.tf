@@ -85,6 +85,7 @@ data "archive_file" "zip_the_python_code" {
 # Lambda Function
 resource "aws_lambda_function" "shopify_flow_func" {
   filename       = "${path.module}/python/lambda_handler.zip"
+  source_code_hash = filebase64sha256("${path.module}/python/lambda_handler.zip")
   function_name  = "Jhooq-Lambda-Function"
   role           = aws_iam_role.shopify_flow_api_role.arn
   handler        = "lambda_handler.lambda_handler"
