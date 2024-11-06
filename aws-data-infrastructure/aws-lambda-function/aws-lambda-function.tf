@@ -1,21 +1,46 @@
+# resource "aws_iam_role" "shopify_flow_api_role" {
+#  name   = "shopify_flow_role"
+#  assume_role_policy = <<EOF
+# {
+#   "Version": "2012-10-17",
+#   "Statement": [
+#     {
+#       "Action": "sts:AssumeRole",
+#       "Principal": {
+#         "Service": "lambda.amazonaws.com"
+#       },
+#       "Effect": "Allow",
+#       "Sid": ""
+#     }
+#   ]
+# }
+# EOF
+# }
+
 resource "aws_iam_role" "shopify_flow_api_role" {
- name   = "shopify_flow_role"
- assume_role_policy = <<EOF
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Action": "sts:AssumeRole",
-      "Principal": {
-        "Service": "lambda.amazonaws.com"
+  name = "shopify_flow_role"
+
+  assume_role_policy = jsonencode({
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "lambda.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
       },
-      "Effect": "Allow",
-      "Sid": ""
-    }
-  ]
+      {
+        "Effect": "Allow",
+        "Principal": {
+          "Service": "apigateway.amazonaws.com"
+        },
+        "Action": "sts:AssumeRole"
+      }
+    ]
+  })
 }
-EOF
-}
+
 
 # IAM policy for logging from a lambda
 resource "aws_iam_policy" "shopify_flow_iam_policy" {
@@ -58,6 +83,13 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
   role        = aws_iam_role.shopify_flow_api_role.name
   policy_arn  = aws_iam_policy.shopify_flow_iam_policy.arn
 }
+
+# Configure API Gateway account settings to use the CloudWatch Logs role
+resource "aws_api_gateway_account" "api_gateway_account" {
+  cloudwatch_role_arn = aws_iam_role.shopify_flow_api_role.arn
+  depends_on          = [aws_iam_role.shopify_flow_api_role, aws_iam_policy.shopify_flow_iam_policy]
+}
+
 
 # Generates an archive from content, a file, or a directory of files.
 data "archive_file" "zip_the_python_code" {
