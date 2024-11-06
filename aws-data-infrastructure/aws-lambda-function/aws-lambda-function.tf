@@ -50,7 +50,10 @@ resource "aws_iam_policy" "shopify_flow_iam_policy" {
         "Action": [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "cloudwatch:Get*",
+          "cloudwatch:List*",
+          "cloudwatch:Describe*"
         ],
         "Resource": "*"
       }
