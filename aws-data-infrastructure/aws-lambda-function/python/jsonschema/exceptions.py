@@ -6,20 +6,11 @@ from __future__ import annotations
 from collections import defaultdict, deque
 from pprint import pformat
 from textwrap import dedent, indent
-from typing import TYPE_CHECKING, Any, ClassVar
-import heapq
 import itertools
-import warnings
 
-from attrs import define
-from referencing.exceptions import Unresolvable as _Unresolvable
+import attr
 
 from jsonschema import _utils
-
-if TYPE_CHECKING:
-    from collections.abc import Iterable, Mapping, MutableMapping, Sequence
-
-    from jsonschema import _types
 
 WEAK_MATCHES: frozenset[str] = frozenset(["anyOf", "oneOf"])
 STRONG_MATCHES: frozenset[str] = frozenset()
@@ -27,44 +18,22 @@ STRONG_MATCHES: frozenset[str] = frozenset()
 _unset = _utils.Unset()
 
 
-def _pretty(thing: Any, prefix: str):
-    """
-    Format something for an error message as prettily as we currently can.
-    """
-    return indent(pformat(thing, width=72, sort_dicts=False), prefix).lstrip()
-
-
-def __getattr__(name):
-    if name == "RefResolutionError":
-        warnings.warn(
-            _RefResolutionError._DEPRECATION_MESSAGE,
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        return _RefResolutionError
-    raise AttributeError(f"module {__name__} has no attribute {name}")
-
-
 class _Error(Exception):
-
-    _word_for_schema_in_error_message: ClassVar[str]
-    _word_for_instance_in_error_message: ClassVar[str]
-
     def __init__(
         self,
-        message: str,
-        validator: str = _unset,  # type: ignore[assignment]
-        path: Iterable[str | int] = (),
-        cause: Exception | None = None,
+        message,
+        validator=_unset,
+        path=(),
+        cause=None,
         context=(),
-        validator_value: Any = _unset,
-        instance: Any = _unset,
-        schema: Mapping[str, Any] | bool = _unset,  # type: ignore[assignment]
-        schema_path: Iterable[str | int] = (),
-        parent: _Error | None = None,
-        type_checker: _types.TypeChecker = _unset,  # type: ignore[assignment]
-    ) -> None:
-        super().__init__(
+        validator_value=_unset,
+        instance=_unset,
+        schema=_unset,
+        schema_path=(),
+        parent=None,
+        type_checker=_unset,
+    ):
+        super(_Error, self).__init__(
             message,
             validator,
             path,
@@ -91,10 +60,10 @@ class _Error(Exception):
         for error in context:
             error.parent = self
 
-    def __repr__(self) -> str:
+    def __repr__(self):
         return f"<{self.__class__.__name__}: {self.message!r}>"
 
-    def __str__(self) -> str:
+    def __str__(self):
         essential_for_verbose = (
             self.validator, self.validator_value, self.instance, self.schema,
         )
@@ -116,19 +85,19 @@ class _Error(Exception):
             {self.message}
 
             Failed validating {self.validator!r} in {schema_path}:
-                {_pretty(self.schema, prefix=prefix)}
+                {indent(pformat(self.schema, width=72), prefix).lstrip()}
 
             On {instance_path}:
-                {_pretty(self.instance, prefix=prefix)}
+                {indent(pformat(self.instance, width=72), prefix).lstrip()}
             """.rstrip(),
         )
 
     @classmethod
-    def create_from(cls, other: _Error):
+    def create_from(cls, other):
         return cls(**other._contents())
 
     @property
-    def absolute_path(self) -> Sequence[str | int]:
+    def absolute_path(self):
         parent = self.parent
         if parent is None:
             return self.relative_path
@@ -138,7 +107,7 @@ class _Error(Exception):
         return path
 
     @property
-    def absolute_schema_path(self) -> Sequence[str | int]:
+    def absolute_schema_path(self):
         parent = self.parent
         if parent is None:
             return self.relative_schema_path
@@ -148,7 +117,7 @@ class _Error(Exception):
         return path
 
     @property
-    def json_path(self) -> str:
+    def json_path(self):
         path = "$"
         for elem in self.absolute_path:
             if isinstance(elem, int):
@@ -157,11 +126,7 @@ class _Error(Exception):
                 path += "." + elem
         return path
 
-    def _set(
-        self,
-        type_checker: _types.TypeChecker | None = None,
-        **kwargs: Any,
-    ) -> None:
+    def _set(self, type_checker=None, **kwargs):
         if type_checker is not None and self._type_checker is _unset:
             self._type_checker = type_checker
 
@@ -174,12 +139,11 @@ class _Error(Exception):
             "message", "cause", "context", "validator", "validator_value",
             "path", "schema_path", "instance", "schema", "parent",
         )
-        return {attr: getattr(self, attr) for attr in attrs}
+        return dict((attr, getattr(self, attr)) for attr in attrs)
 
-    def _matches_type(self) -> bool:
+    def _matches_type(self):
         try:
-            # We ignore this as we want to simply crash if this happens
-            expected = self.schema["type"]  # type: ignore[index]
+            expected = self.schema["type"]
         except (KeyError, TypeError):
             return False
 
@@ -210,51 +174,16 @@ class SchemaError(_Error):
     _word_for_instance_in_error_message = "schema"
 
 
-@define(slots=False)
-class _RefResolutionError(Exception):
+@attr.s(hash=True)
+class RefResolutionError(Exception):
     """
     A ref could not be resolved.
     """
 
-    _DEPRECATION_MESSAGE = (
-        "jsonschema.exceptions.RefResolutionError is deprecated as of version "
-        "4.18.0. If you wish to catch potential reference resolution errors, "
-        "directly catch referencing.exceptions.Unresolvable."
-    )
-
-    _cause: Exception
-
-    def __eq__(self, other):
-        if self.__class__ is not other.__class__:
-            return NotImplemented  # pragma: no cover -- uncovered but deprecated  # noqa: E501
-        return self._cause == other._cause
-
-    def __str__(self) -> str:
-        return str(self._cause)
-
-
-class _WrappedReferencingError(_RefResolutionError, _Unresolvable):  # pragma: no cover -- partially uncovered but to be removed  # noqa: E501
-    def __init__(self, cause: _Unresolvable):
-        object.__setattr__(self, "_wrapped", cause)
-
-    def __eq__(self, other):
-        if other.__class__ is self.__class__:
-            return self._wrapped == other._wrapped
-        elif other.__class__ is self._wrapped.__class__:
-            return self._wrapped == other
-        return NotImplemented
-
-    def __getattr__(self, attr):
-        return getattr(self._wrapped, attr)
-
-    def __hash__(self):
-        return hash(self._wrapped)
-
-    def __repr__(self):
-        return f"<WrappedReferencingError {self._wrapped!r}>"
+    _cause = attr.ib()
 
     def __str__(self):
-        return f"{self._wrapped.__class__.__name__}: {self._wrapped}"
+        return str(self._cause)
 
 
 class UndefinedTypeCheck(Exception):
@@ -262,10 +191,10 @@ class UndefinedTypeCheck(Exception):
     A type checker was asked to check a type it did not have registered.
     """
 
-    def __init__(self, type: str) -> None:
+    def __init__(self, type):
         self.type = type
 
-    def __str__(self) -> str:
+    def __str__(self):
         return f"Type {self.type!r} is unknown to this type checker"
 
 
@@ -285,10 +214,10 @@ class UnknownType(Exception):
         return dedent(
             f"""\
             Unknown type {self.type!r} for validator with schema:
-                {_pretty(self.schema, prefix=prefix)}
+                {indent(pformat(self.schema, width=72), prefix).lstrip()}
 
             While checking instance:
-                {_pretty(self.instance, prefix=prefix)}
+                {indent(pformat(self.instance, width=72), prefix).lstrip()}
             """.rstrip(),
         )
 
@@ -299,7 +228,7 @@ class FormatError(Exception):
     """
 
     def __init__(self, message, cause=None):
-        super().__init__(message, cause)
+        super(FormatError, self).__init__(message, cause)
         self.message = message
         self.cause = self.__cause__ = cause
 
@@ -307,16 +236,16 @@ class FormatError(Exception):
         return self.message
 
 
-class ErrorTree:
+class ErrorTree(object):
     """
     ErrorTrees make it easier to check which validations failed.
     """
 
     _instance = _unset
 
-    def __init__(self, errors: Iterable[ValidationError] = ()):
-        self.errors: MutableMapping[str, ValidationError] = {}
-        self._contents: Mapping[str, ErrorTree] = defaultdict(self.__class__)
+    def __init__(self, errors=()):
+        self.errors = {}
+        self._contents = defaultdict(self.__class__)
 
         for error in errors:
             container = self
@@ -326,10 +255,11 @@ class ErrorTree:
 
             container._instance = error.instance
 
-    def __contains__(self, index: str | int):
+    def __contains__(self, index):
         """
         Check whether ``instance[index]`` has any errors.
         """
+
         return index in self._contents
 
     def __getitem__(self, index):
@@ -341,31 +271,22 @@ class ErrorTree:
         by ``instance.__getitem__`` will be propagated (usually this is
         some subclass of `LookupError`.
         """
+
         if self._instance is not _unset and index not in self:
             self._instance[index]
         return self._contents[index]
 
-    def __setitem__(self, index: str | int, value: ErrorTree):
+    def __setitem__(self, index, value):
         """
         Add an error to the tree at the given ``index``.
-
-        .. deprecated:: v4.20.0
-
-            Setting items on an `ErrorTree` is deprecated without replacement.
-            To populate a tree, provide all of its sub-errors when you
-            construct the tree.
         """
-        warnings.warn(
-            "ErrorTree.__setitem__ is deprecated without replacement.",
-            DeprecationWarning,
-            stacklevel=2,
-        )
-        self._contents[index] = value  # type: ignore[index]
+        self._contents[index] = value
 
     def __iter__(self):
         """
         Iterate (non-recursively) over the indices in the instance with errors.
         """
+
         return iter(self._contents)
 
     def __len__(self):
@@ -375,15 +296,14 @@ class ErrorTree:
         return self.total_errors
 
     def __repr__(self):
-        total = len(self)
-        errors = "error" if total == 1 else "errors"
-        return f"<{self.__class__.__name__} ({total} total {errors})>"
+        return f"<{self.__class__.__name__} ({len(self)} total errors)>"
 
     @property
     def total_errors(self):
         """
         The total number of errors in the entire tree, including children.
         """
+
         child_errors = sum(len(tree) for _, tree in self._contents.items())
         return len(self.errors) + child_errors
 
@@ -394,42 +314,28 @@ def by_relevance(weak=WEAK_MATCHES, strong=STRONG_MATCHES):
 
     Arguments:
         weak (set):
-            a collection of validation keywords to consider to be
-            "weak".  If there are two errors at the same level of the
-            instance and one is in the set of weak validation keywords,
-            the other error will take priority. By default, :kw:`anyOf`
-            and :kw:`oneOf` are considered weak keywords and will be
-            superseded by other same-level validation errors.
+            a collection of validator names to consider to be "weak".
+            If there are two errors at the same level of the instance
+            and one is in the set of weak validator names, the other
+            error will take priority. By default, :validator:`anyOf` and
+            :validator:`oneOf` are considered weak validators and will
+            be superseded by other same-level validation errors.
 
         strong (set):
-            a collection of validation keywords to consider to be
-            "strong"
-
+            a collection of validator names to consider to be "strong"
     """
-
     def relevance(error):
         validator = error.validator
-        return (                        # prefer errors which are ...
-            -len(error.path),           # 'deeper' and thereby more specific
-            error.path,                 # earlier (for sibling errors)
-            validator not in weak,      # for a non-low-priority keyword
-            validator in strong,        # for a high priority keyword
-            not error._matches_type(),  # at least match the instance's type
-        )                               # otherwise we'll treat them the same
-
+        return (
+            -len(error.path),
+            validator not in weak,
+            validator in strong,
+            not error._matches_type(),
+        )
     return relevance
 
 
 relevance = by_relevance()
-"""
-A key function (e.g. to use with `sorted`) which sorts errors by relevance.
-
-Example:
-
-.. code:: python
-
-    sorted(validator.iter_errors(12), key=jsonschema.exceptions.relevance)
-"""
 
 
 def best_match(errors, key=relevance):
@@ -440,10 +346,10 @@ def best_match(errors, key=relevance):
     `ValidationError.path` is shorter) are considered better matches,
     since they indicate "more" is wrong with the instance.
 
-    If the resulting match is either :kw:`oneOf` or :kw:`anyOf`, the
-    *opposite* assumption is made -- i.e. the deepest error is picked,
-    since these keywords only need to match once, and any other errors
-    may not be relevant.
+    If the resulting match is either :validator:`oneOf` or :validator:`anyOf`,
+    the *opposite* assumption is made -- i.e. the deepest error is picked,
+    since these validators only need to match once, and any other errors may
+    not be relevant.
 
     Arguments:
         errors (collections.abc.Iterable):
@@ -469,7 +375,6 @@ def best_match(errors, key=relevance):
 
         This function is a heuristic. Its return value may change for a given
         set of inputs from version to version if better heuristics are added.
-
     """
     errors = iter(errors)
     best = next(errors, None)
@@ -478,10 +383,5 @@ def best_match(errors, key=relevance):
     best = max(itertools.chain([best], errors), key=key)
 
     while best.context:
-        # Calculate the minimum via nsmallest, because we don't recurse if
-        # all nested errors have the same relevance (i.e. if min == max == all)
-        smallest = heapq.nsmallest(2, best.context, key=key)
-        if len(smallest) == 2 and key(smallest[0]) == key(smallest[1]):  # noqa: PLR2004
-            return best
-        best = smallest[0]
+        best = min(best.context, key=key)
     return best
