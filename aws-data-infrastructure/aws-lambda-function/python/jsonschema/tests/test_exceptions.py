@@ -8,8 +8,12 @@ from jsonschema.validators import _LATEST_VERSION
 class TestBestMatch(TestCase):
     def best_match_of(self, instance, schema):
         errors = list(_LATEST_VERSION(schema).iter_errors(instance))
+        msg =  f"No errors found for {instance} under {schema!r}!"
+        self.assertTrue(errors, msg=msg)
+
         best = exceptions.best_match(iter(errors))
         reversed_best = exceptions.best_match(reversed(errors))
+
         self.assertEqual(
             best._contents(),
             reversed_best._contents(),
@@ -66,6 +70,65 @@ class TestBestMatch(TestCase):
         best = self.best_match_of(instance={"foo": {"bar": 12}}, schema=schema)
         self.assertEqual(best.validator_value, "array")
 
+    def test_no_anyOf_traversal_for_equally_relevant_errors(self):
+        """
+        We don't traverse into an anyOf (as above) if all of its context errors
+        seem to be equally "wrong" against the instance.
+        """
+
+        schema = {
+            "anyOf": [
+                {"type": "string"},
+                {"type": "integer"},
+                {"type": "object"},
+            ],
+        }
+        best = self.best_match_of(instance=[], schema=schema)
+        self.assertEqual(best.validator, "anyOf")
+
+    def test_anyOf_traversal_for_single_equally_relevant_error(self):
+        """
+        We *do* traverse anyOf with a single nested error, even though it is
+        vacuously equally relevant to itself.
+        """
+
+        schema = {
+            "anyOf": [
+                {"type": "string"},
+            ],
+        }
+        best = self.best_match_of(instance=[], schema=schema)
+        self.assertEqual(best.validator, "type")
+
+    def test_anyOf_traversal_for_single_sibling_errors(self):
+        """
+        We *do* traverse anyOf with a single subschema that fails multiple
+        times (e.g. on multiple items).
+        """
+
+        schema = {
+            "anyOf": [
+                {"items": {"const": 37}},
+            ],
+        }
+        best = self.best_match_of(instance=[12, 12], schema=schema)
+        self.assertEqual(best.validator, "const")
+
+    def test_anyOf_traversal_for_non_type_matching_sibling_errors(self):
+        """
+        We *do* traverse anyOf with multiple subschemas when one does not type
+        match.
+        """
+
+        schema = {
+            "anyOf": [
+                {"type": "object"},
+                {"items": {"const": 37}},
+            ],
+        }
+        best = self.best_match_of(instance=[12, 12], schema=schema)
+        self.assertEqual(best.validator, "const")
+
     def test_if_the_most_relevant_error_is_oneOf_it_is_traversed(self):
         """
         If the most relevant error is an oneOf, then we traverse its context
@@ -89,6 +152,65 @@ class TestBestMatch(TestCase):
         best = self.best_match_of(instance={"foo": {"bar": 12}}, schema=schema)
         self.assertEqual(best.validator_value, "array")
 
+    def test_no_oneOf_traversal_for_equally_relevant_errors(self):
+        """
+        We don't traverse into an oneOf (as above) if all of its context errors
+        seem to be equally "wrong" against the instance.
+        """
+
+        schema = {
+            "oneOf": [
+                {"type": "string"},
+                {"type": "integer"},
+                {"type": "object"},
+            ],
+        }
+        best = self.best_match_of(instance=[], schema=schema)
+        self.assertEqual(best.validator, "oneOf")
+
+    def test_oneOf_traversal_for_single_equally_relevant_error(self):
+        """
+        We *do* traverse oneOf with a single nested error, even though it is
+        vacuously equally relevant to itself.
+        """
+
+        schema = {
+            "oneOf": [
+                {"type": "string"},
+            ],
+        }
+        best = self.best_match_of(instance=[], schema=schema)
+        self.assertEqual(best.validator, "type")
+
+    def test_oneOf_traversal_for_single_sibling_errors(self):
+        """
+        We *do* traverse oneOf with a single subschema that fails multiple
+        times (e.g. on multiple items).
+        """
+
+        schema = {
+            "oneOf": [
+                {"items": {"const": 37}},
+            ],
+        }
+        best = self.best_match_of(instance=[12, 12], schema=schema)
+        self.assertEqual(best.validator, "const")
+
+    def test_oneOf_traversal_for_non_type_matching_sibling_errors(self):
+        """
+        We *do* traverse oneOf with multiple subschemas when one does not type
+        match.
+        """
+
+        schema = {
+            "oneOf": [
+                {"type": "object"},
+                {"items": {"const": 37}},
+            ],
+        }
+        best = self.best_match_of(instance=[12, 12], schema=schema)
+        self.assertEqual(best.validator, "const")
+
     def test_if_the_most_relevant_error_is_allOf_it_is_traversed(self):
         """
         Now, if the error is allOf, we traverse but select the *most* relevant
@@ -109,6 +231,11 @@ class TestBestMatch(TestCase):
         self.assertEqual(best.validator_value, "string")
 
     def test_nested_context_for_oneOf(self):
+        """
+        We traverse into nested contexts (a oneOf containing an error in a
+        nested oneOf here).
+        """
+
         schema = {
             "properties": {
                 "foo": {
@@ -229,7 +356,7 @@ class TestByRelevance(TestCase):
             [["foo"], []],
         )
 
-    def test_weak_validators_are_lower_priority(self):
+    def test_weak_keywords_are_lower_priority(self):
         weak = exceptions.ValidationError("Oh no!", path=[], validator="a")
         normal = exceptions.ValidationError("Oh yes!", path=[], validator="b")
 
@@ -241,7 +368,7 @@ class TestByRelevance(TestCase):
         match = max([normal, weak], key=best_match)
         self.assertIs(match, normal)
 
-    def test_strong_validators_are_higher_priority(self):
+    def test_strong_keywords_are_higher_priority(self):
         weak = exceptions.ValidationError("Oh no!", path=[], validator="a")
         normal = exceptions.ValidationError("Oh yes!", path=[], validator="b")
         strong = exceptions.ValidationError("Oh fine!", path=[], validator="c")
@@ -275,7 +402,7 @@ class TestErrorTree(TestCase):
         tree = exceptions.ErrorTree(errors)
         self.assertNotIn("foo", tree)
 
-    def test_validators_that_failed_appear_in_errors_dict(self):
+    def test_keywords_that_failed_appear_in_errors_dict(self):
         error = exceptions.ValidationError("a message", validator="foo")
         tree = exceptions.ErrorTree([error])
         self.assertEqual(tree.errors, {"foo": error})
@@ -321,9 +448,8 @@ class TestErrorTree(TestCase):
 
     def test_if_its_in_the_tree_anyhow_it_does_not_raise_an_error(self):
         """
-        If a validator is dumb (like :validator:`required` in draft 3) and
-        refers to a path that isn't in the instance, the tree still properly
-        returns a subtree for that path.
+        If a keyword refers to a path that isn't in the instance, the
+        tree still properly returns a subtree for that path.
         """
 
         error = exceptions.ValidationError(
@@ -332,7 +458,33 @@ class TestErrorTree(TestCase):
         tree = exceptions.ErrorTree([error])
         self.assertIsInstance(tree["foo"], exceptions.ErrorTree)
 
-    def test_repr(self):
+    def test_iter(self):
+        e1, e2 = (
+            exceptions.ValidationError(
+                "1",
+                validator="foo",
+                path=["bar", "bar2"],
+                instance="i1"),
+            exceptions.ValidationError(
+                "2",
+                validator="quux",
+                path=["foobar", 2],
+                instance="i2"),
+        )
+        tree = exceptions.ErrorTree([e1, e2])
+        self.assertEqual(set(tree), {"bar", "foobar"})
+
+    def test_repr_single(self):
+        error = exceptions.ValidationError(
+            "1",
+            validator="foo",
+            path=["bar", "bar2"],
+            instance="i1",
+        )
+        tree = exceptions.ErrorTree([error])
+        self.assertEqual(repr(tree), "<ErrorTree (1 total error)>")
+
+    def test_repr_multiple(self):
         e1, e2 = (
             exceptions.ValidationError(
                 "1",
@@ -347,6 +499,10 @@ class TestErrorTree(TestCase):
         )
         tree = exceptions.ErrorTree([e1, e2])
         self.assertEqual(repr(tree), "<ErrorTree (2 total errors)>")
+
+    def test_repr_empty(self):
+        tree = exceptions.ErrorTree([])
+        self.assertEqual(repr(tree), "<ErrorTree (0 total errors)>")
 
 
 class TestErrorInitReprStr(TestCase):
@@ -492,6 +648,29 @@ class TestErrorInitReprStr(TestCase):
             validator="maxLength",
         )
 
+    def test_does_not_reorder_dicts(self):
+        self.assertShows(
+            """
+            Failed validating 'type' in schema:
+                {'do': 3, 'not': 7, 'sort': 37, 'me': 73}
+
+            On instance:
+                {'here': 73, 'too': 37, 'no': 7, 'sorting': 3}
+            """,
+            schema={
+                "do": 3,
+                "not": 7,
+                "sort": 37,
+                "me": 73,
+            },
+            instance={
+                "here": 73,
+                "too": 37,
+                "no": 7,
+                "sorting": 3,
+            },
+        )
+
     def test_str_works_with_instances_having_overriden_eq_operator(self):
         """
         Check for #164 which rendered exceptions unusable when a
@@ -499,7 +678,7 @@ class TestErrorInitReprStr(TestCase):
         that returned truthy values.
         """
 
-        class DontEQMeBro(object):
+        class DontEQMeBro:
             def __eq__(this, other):  # pragma: no cover
                 self.fail("Don't!")
 
@@ -519,5 +698,5 @@ class TestErrorInitReprStr(TestCase):
 
 class TestHashable(TestCase):
     def test_hashable(self):
-        set([exceptions.ValidationError("")])
-        set([exceptions.SchemaError("")])
+        {exceptions.ValidationError("")}
+        {exceptions.SchemaError("")}

@@ -1,4 +1,5 @@
 from contextlib import redirect_stderr, redirect_stdout
+from importlib import metadata
 from io import StringIO
 from json import JSONDecodeError
 from pathlib import Path
@@ -9,27 +10,25 @@ import os
 import subprocess
 import sys
 import tempfile
+import warnings
 
-try:  # pragma: no cover
-    from importlib import metadata
-except ImportError:  # pragma: no cover
-    import importlib_metadata as metadata  # type: ignore
-
-from pyrsistent import m
-
-from jsonschema import Draft4Validator, Draft202012Validator, cli
+from jsonschema import Draft4Validator, Draft202012Validator
 from jsonschema.exceptions import (
-    RefResolutionError,
     SchemaError,
     ValidationError,
+    _RefResolutionError,
 )
 from jsonschema.validators import _LATEST_VERSION, validate
+
+with warnings.catch_warnings():
+    warnings.simplefilter("ignore")
+    from jsonschema import cli
 
 
 def fake_validator(*errors):
     errors = list(reversed(errors))
 
-    class FakeValidator(object):
+    class FakeValidator:
         def __init__(self, *args, **kwargs):
             pass
 
@@ -65,13 +64,13 @@ def _message_for(non_json):
 
 class TestCLI(TestCase):
     def run_cli(
-        self, argv, files=m(), stdin=StringIO(), exit_code=0, **override,
+        self, argv, files=None, stdin=StringIO(), exit_code=0, **override,
     ):
         arguments = cli.parse_args(argv)
         arguments.update(override)
 
         self.assertFalse(hasattr(cli, "open"))
-        cli.open = fake_open(files)
+        cli.open = fake_open(files or {})
         try:
             stdout, stderr = StringIO(), StringIO()
             actual_exit_code = cli.run(
@@ -85,18 +84,13 @@ class TestCLI(TestCase):
 
         self.assertEqual(
             actual_exit_code, exit_code, msg=dedent(
-                """
-                    Expected an exit code of {} != {}.
+                f"""
+                    Expected an exit code of {exit_code} != {actual_exit_code}.
 
-                    stdout: {}
+                    stdout: {stdout.getvalue()}
 
-                    stderr: {}
-                """.format(
-                    exit_code,
-                    actual_exit_code,
-                    stdout.getvalue(),
-                    stderr.getvalue(),
-                ),
+                    stderr: {stderr.getvalue()}
+                """,
             ),
         )
         return stdout.getvalue(), stderr.getvalue()
@@ -451,9 +445,9 @@ class TestCLI(TestCase):
             argv=["-i", "some_instance", "some_schema"],
 
             exit_code=1,
-            stderr="""\
-                Failed to parse 'some_instance': {}
-            """.format(_message_for(instance)),
+            stderr=f"""\
+                Failed to parse 'some_instance': {_message_for(instance)}
+            """,
         )
 
     def test_instance_is_invalid_JSON_pretty_output(self):
@@ -484,9 +478,9 @@ class TestCLI(TestCase):
             argv=["some_schema"],
 
             exit_code=1,
-            stderr="""\
-                Failed to parse <stdin>: {}
-            """.format(_message_for(instance)),
+            stderr=f"""\
+                Failed to parse <stdin>: {_message_for(instance)}
+            """,
         )
 
     def test_instance_is_invalid_JSON_on_stdin_pretty_output(self):
@@ -514,9 +508,9 @@ class TestCLI(TestCase):
             argv=["some_schema"],
 
             exit_code=1,
-            stderr="""\
-                Failed to parse 'some_schema': {}
-            """.format(_message_for(schema)),
+            stderr=f"""\
+                Failed to parse 'some_schema': {_message_for(schema)}
+            """,
         )
 
     def test_schema_is_invalid_JSON_pretty_output(self):
@@ -544,9 +538,9 @@ class TestCLI(TestCase):
             argv=["some_schema"],
 
             exit_code=1,
-            stderr="""\
-                Failed to parse 'some_schema': {}
-            """.format(_message_for(schema)),
+            stderr=f"""\
+                Failed to parse 'some_schema': {_message_for(schema)}
+            """,
         )
 
     def test_schema_and_instance_are_both_invalid_JSON_pretty_output(self):
@@ -697,12 +691,13 @@ class TestCLI(TestCase):
 
     def test_successful_validation_via_explicit_base_uri(self):
         ref_schema_file = tempfile.NamedTemporaryFile(delete=False)
+        ref_schema_file.close()
         self.addCleanup(os.remove, ref_schema_file.name)
 
         ref_path = Path(ref_schema_file.name)
         ref_path.write_text('{"definitions": {"num": {"type": "integer"}}}')
 
-        schema = f'{{"$ref": "{ref_path.name}#definitions/num"}}'
+        schema = f'{{"$ref": "{ref_path.name}#/definitions/num"}}'
 
         self.assertOutputs(
             files=dict(some_schema=schema, some_instance="1"),
@@ -717,12 +712,13 @@ class TestCLI(TestCase):
 
     def test_unsuccessful_validation_via_explicit_base_uri(self):
         ref_schema_file = tempfile.NamedTemporaryFile(delete=False)
+        ref_schema_file.close()
         self.addCleanup(os.remove, ref_schema_file.name)
 
         ref_path = Path(ref_schema_file.name)
         ref_path.write_text('{"definitions": {"num": {"type": "integer"}}}')
 
-        schema = f'{{"$ref": "{ref_path.name}#definitions/num"}}'
+        schema = f'{{"$ref": "{ref_path.name}#/definitions/num"}}'
 
         self.assertOutputs(
             files=dict(some_schema=schema, some_instance='"1"'),
@@ -740,7 +736,7 @@ class TestCLI(TestCase):
         schema = '{"$ref": "someNonexistentFile.json#definitions/num"}'
         instance = "1"
 
-        with self.assertRaises(RefResolutionError) as e:
+        with self.assertRaises(_RefResolutionError) as e:
             self.assertOutputs(
                 files=dict(
                     some_schema=schema,
@@ -755,11 +751,11 @@ class TestCLI(TestCase):
         error = str(e.exception)
         self.assertIn(f"{os.sep}someNonexistentFile.json'", error)
 
-    def test_invalid_exlicit_base_uri(self):
+    def test_invalid_explicit_base_uri(self):
         schema = '{"$ref": "foo.json#definitions/num"}'
         instance = "1"
 
-        with self.assertRaises(RefResolutionError) as e:
+        with self.assertRaises(_RefResolutionError) as e:
             self.assertOutputs(
                 files=dict(
                     some_schema=schema,
@@ -857,7 +853,7 @@ class TestParser(TestCase):
 
     def cli_output_for(self, *argv):
         stdout, stderr = StringIO(), StringIO()
-        with redirect_stdout(stdout), redirect_stderr(stderr):
+        with redirect_stdout(stdout), redirect_stderr(stderr):  # noqa: SIM117
             with self.assertRaises(SystemExit):
                 cli.parse_args(argv)
         return stdout.getvalue(), stderr.getvalue()
@@ -893,7 +889,7 @@ class TestCLIIntegration(TestCase):
 
     def test_version(self):
         version = subprocess.check_output(
-            [sys.executable, "-m", "jsonschema", "--version"],
+            [sys.executable, "-W", "ignore", "-m", "jsonschema", "--version"],
             stderr=subprocess.STDOUT,
         )
         version = version.decode("utf-8").strip()
