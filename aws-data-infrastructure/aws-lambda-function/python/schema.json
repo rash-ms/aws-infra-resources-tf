@@ -56,6 +56,6 @@
         "update_at": { "type": "string", "format": "date-time" },
         "event_type": { "type": "string", "enum": ["subscription_created", "subscription_updated"] }
     },
-    "required": ["subscription_id", "customer_id", "order_id", "app_id", "customer_email", "event_type"],
+    "required": ["subscription_id", "customer_id", "order_id", "app_id", "customer_email"],
     "additionalProperties": true
 }
