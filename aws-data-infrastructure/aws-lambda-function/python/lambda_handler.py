@@ -5,8 +5,8 @@ import os
 import urllib3
 from datetime import datetime
 from helper_function import *
-from jsonschema import validate, ValidationError
-
+# from jsonschema import validate, ValidationError
+import fastjsonschema
 
 # POST REQUEST
 def lambda_handler(event, context):
@@ -27,7 +27,10 @@ def lambda_handler(event, context):
         data = json.loads(body)
 
         processed_data = process_data(data, schema)
-        validate(instance=processed_data, schema=schema)
+        # validate(instance=processed_data, schema=schema)
+
+        validate = fastjsonschema.compile(schema)
+        validate(processed_data)
 
         event_type = data.get("event_type")
         if event_type not in ["subscription_created", "subscription_updated"]:
@@ -54,13 +57,22 @@ def lambda_handler(event, context):
             'body': json.dumps({'message': 'Data successfully written to S3', 'object_key': object_key})
         }
 
-    except ValidationError as e:
+    # except ValidationError as e:
+    #     error_message = f'Schema validation failed in {event_type}: {str(e)}'
+    #     send_to_slack(f"Error in Lambda function: {error_message}")
+    #     return {
+    #         'statusCode': 400,
+    #         'body': json.dumps({'error': error_message})
+    #     }
+
+    except fastjsonschema.JsonSchemaException as e:
         error_message = f'Schema validation failed in {event_type}: {str(e)}'
         send_to_slack(f"Error in Lambda function: {error_message}")
         return {
             'statusCode': 400,
             'body': json.dumps({'error': error_message})
         }
+    
     except json.JSONDecodeError:
         error_message = f'Invalid JSON format in {event_type} Shopify flow app' 
         send_to_slack(f"Error in Lambda function: {error_message}")
@@ -68,6 +80,7 @@ def lambda_handler(event, context):
             'statusCode': 400,
             'body': json.dumps({'error': error_message})
         }
+    
     except Exception as e:
         error_message = f"Unexpected error in {event_type}: {str(e)}"
         send_to_slack(f"Error in Lambda function: {error_message}")
