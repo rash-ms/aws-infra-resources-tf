@@ -2,8 +2,6 @@ import json
 import boto3
 import os
 import urllib3
-from jsonschema import validate, ValidationError
-
 
 s3 = boto3.client('s3')
 http = urllib3.PoolManager()
