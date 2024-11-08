@@ -31,8 +31,6 @@ def send_to_slack(message):
     if response.status != 200:
         print(f"Failed to send message to Slack: {response.status}, {response.data}")
 
-
-s
 # def load_schema():
 #     response = s3.get_object(Bucket="my-schema-bucket", Key="schema.json")
 #     schema = json.loads(response['Body'].read().decode('utf-8'))
@@ -51,4 +49,5 @@ def process_data(data, schema):
     processed_data = {}
     for field, specs in schema.get("properties", {}).items():
         processed_data[field] = data.get(field, None)  # Set to None if the field is missing
+
     return processed_data
