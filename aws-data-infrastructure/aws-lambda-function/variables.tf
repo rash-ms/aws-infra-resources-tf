@@ -16,6 +16,14 @@
 #   default = "stg"
 # }
 
+# variable "test_s3_bucket" {
+#   type    = map(string)
+#   default = {
+#     staging = "byt_test_prod"
+#     production = "byt_test_prod"
+#   }
+# }
+
 # variable "tenant_name" {
 #   type    = string
 #   default = "data-platform"
