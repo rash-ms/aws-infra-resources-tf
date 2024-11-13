@@ -1,5 +1,5 @@
 resource "aws_iam_role" "spain_sub_shopify_flow_api_role" {
-  name = "shopify_flow_role"
+  name = "spain_sub_shopify_flow_api_role"
 
   assume_role_policy = jsonencode({
     "Version": "2012-10-17",
