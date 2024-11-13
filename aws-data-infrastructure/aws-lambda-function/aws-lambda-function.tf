@@ -1,4 +1,4 @@
-resource "aws_iam_role" "shopify_flow_api_role" {
+resource "aws_iam_role" "spain_sub_shopify_flow_api_role" {
   name = "shopify_flow_role"
 
   assume_role_policy = jsonencode({
@@ -23,9 +23,9 @@ resource "aws_iam_role" "shopify_flow_api_role" {
 }
 
 # IAM policy for logging from a lambda
-resource "aws_iam_policy" "shopify_flow_iam_policy" {
+resource "aws_iam_policy" "spain_sub_shopify_flow_iam_policy" {
 
-  name         = "shopify_flow_iam_policy_role"
+  name         = "spain_sub_shopify_flow_iam_policy"
   path         = "/"
   description  = "AWS IAM Policy for managing aws lambda role"
   policy = jsonencode({
@@ -63,14 +63,14 @@ resource "aws_iam_policy" "shopify_flow_iam_policy" {
 
 # Policy Attachment on the role.
 resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
-  role        = aws_iam_role.shopify_flow_api_role.name
-  policy_arn  = aws_iam_policy.shopify_flow_iam_policy.arn
+  role        = aws_iam_role.spain_sub_shopify_flow_api_role.name
+  policy_arn  = aws_iam_policy.spain_sub_shopify_flow_iam_policy.arn
 }
 
 # Configure API Gateway account settings to use the CloudWatch Logs role
 # resource "aws_api_gateway_account" "api_gateway_account" {
-#   cloudwatch_role_arn = aws_iam_role.shopify_flow_api_role.arn
-#   depends_on          = [aws_iam_role.shopify_flow_api_role, aws_iam_policy.shopify_flow_iam_policy]
+#   cloudwatch_role_arn = aws_iam_role.spain_sub_shopify_flow_api_role.arn
+#   depends_on          = [aws_iam_role.spain_sub_shopify_flow_api_role, aws_iam_policy.spain_sub_shopify_flow_iam_policy]
 # }
 
 
@@ -87,7 +87,7 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 #   filename       = "${path.module}/python/lambda_handler.zip"
 #   source_code_hash = filebase64sha256("${path.module}/python/lambda_handler.zip")
 #   function_name  = "Jhooq-Lambda-Function"
-#   role           = aws_iam_role.shopify_flow_api_role.arn
+#   role           = aws_iam_role.spain_sub_shopify_flow_api_role.arn
 #   handler        = "lambda_handler.lambda_handler"
 #   runtime        = "python3.8"
 #   depends_on     = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
@@ -106,7 +106,7 @@ resource "aws_lambda_function" "shopify_flow_func" {
   s3_key            = data.aws_s3_object.lambda_code_versioned_object.key
   s3_object_version = data.aws_s3_object.lambda_code_versioned_object.version_id  
   function_name     = "Spain-Sub-Shopify-Flow-Function"
-  role              = aws_iam_role.shopify_flow_api_role.arn
+  role              = aws_iam_role.spain_sub_shopify_flow_api_role.arn
   handler           = "spain_sub_function.lambda_handler"
   runtime           = "python3.8"
   depends_on        = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
