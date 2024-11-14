@@ -72,13 +72,13 @@ resource "aws_api_gateway_resource" "spain_sub_resource" {
   depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]
 }
 
-# Define GET Method on '/contract'
-resource "aws_api_gateway_method" "spain_sub_get_method" {
-  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.spain_sub_resource.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
+# # Define GET Method on '/contract'
+# resource "aws_api_gateway_method" "spain_sub_get_method" {
+#   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id   = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method   = "GET"
+#   authorization = "NONE"
+# }
 
 # Define POST Method on '/contract'
 resource "aws_api_gateway_method" "spain_sub_post_method" {
