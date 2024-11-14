@@ -217,9 +217,10 @@ resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
 
 
 # API Gateway Stage with CloudWatch Logging Enabled
+# API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
-  stage_name   = "subscriptions"
-  rest_api_id  = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  stage_name    = "subscriptions"
+  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
 
   access_log_settings {
@@ -232,16 +233,14 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
       "resourcePath"   = "$context.resourcePath",
       "status"         = "$context.status",
       "responseLength" = "$context.responseLength",
-      "userAgent"      = "$context.identity.userAgent",
-      "requestBody"    = "$context.requestBody"
+      "userAgent"      = "$context.identity.userAgent"
     })
   }
-  
-  # Enable execution logging
+
   xray_tracing_enabled = true
   tags = {
     "Name" = "spain_sub_shopify_flow_log"
   }
+
+  depends_on = [aws_api_gateway_account.api_gateway_account_settings]
 }
-
-
