@@ -102,6 +102,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   type                    = "AWS"
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/bronze/events/{event_type}/{event_type}.json"
   credentials             = aws_iam_role.spain_sub_shopify_flow_api_role.arn
+  passthrough_behavior    = "WHEN_NO_MATCH"
 
   # Pass event_type to the S3 path dynamically
   request_parameters = {
@@ -120,6 +121,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 EOF
   }
 }
+
 
 # CloudWatch Log Group for API Gateway Logs
 resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
