@@ -115,9 +115,10 @@ resource "aws_api_gateway_integration" "spain_sub_get_integration" {
 EOF
   }
 
-  request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
-  }
+  # request_templates = {
+  #   "application/json" = "{\"statusCode\": 200}"
+  # }
+  
 }
 
 # API Gateway Integration with S3 for the POST request
