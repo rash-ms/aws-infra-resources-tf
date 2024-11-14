@@ -226,19 +226,19 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
 
-#   access_log_settings {
-#     destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
-#     format          = jsonencode({
-#       "requestId"      = "$context.requestId",
-#       "ip"             = "$context.identity.sourceIp",
-#       "requestTime"    = "$context.requestTime",
-#       "httpMethod"     = "$context.httpMethod",
-#       "resourcePath"   = "$context.resourcePath",
-#       "status"         = "$context.status",
-#       "responseLength" = "$context.responseLength",
-#       "userAgent"      = "$context.identity.userAgent"
-#     })
-#   }
+  access_log_settings {
+    destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
+    format          = jsonencode({
+      "requestId"      = "$context.requestId",
+      "ip"             = "$context.identity.sourceIp",
+      "requestTime"    = "$context.requestTime",
+      "httpMethod"     = "$context.httpMethod",
+      "resourcePath"   = "$context.resourcePath",
+      "status"         = "$context.status",
+      "responseLength" = "$context.responseLength",
+      "userAgent"      = "$context.identity.userAgent"
+    })
+  }
 
   xray_tracing_enabled = true
   tags = {
