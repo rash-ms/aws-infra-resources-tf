@@ -99,10 +99,26 @@ resource "aws_api_gateway_integration" "spain_sub_get_integration" {
   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
   http_method             = aws_api_gateway_method.spain_sub_get_method.http_method
   type                    = "MOCK"  # Use MOCK if no real backend is needed
+  cache_key_parameters    = ["method.request.path.param"]
+  cache_namespace         = "my-api-cache"
+  timeout_milliseconds    = 29000
+
+
+  request_parameters = {
+    "integration.request.header.X-Authorization" = "'static'"
+  }
 
   request_templates = {
-    "application/json" = "{\"statusCode\": 200}"
+    "application/json" = <<EOF
+{
+  "body": $input.json('$')
+}
+EOF
   }
+
+  # request_templates = {
+  #   "application/json" = "{\"statusCode\": 200}"
+  # }
 }
 
 # API Gateway Integration with S3 for the POST request
