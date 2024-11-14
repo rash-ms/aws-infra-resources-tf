@@ -4,8 +4,8 @@ data "aws_s3_bucket" "spain_sub_event_bucket" {
 }
 
 # IAM Role for API Gateway to access S3
-resource "aws_iam_role" "spain_sub_shopify_flow_api_role" {
-  name = "spain_sub_shopify_flow_api_role"
+resource "aws_iam_role" "spain_sub_api_gateway_s3_api_role" {
+  name = "spain_sub_api_gateway_s3_api_role"
 
   assume_role_policy = jsonencode({
     Version = "2012-10-17",
@@ -22,8 +22,8 @@ resource "aws_iam_role" "spain_sub_shopify_flow_api_role" {
 }
 
 # IAM Policy for S3 access and CloudWatch logging
-resource "aws_iam_policy" "spain_sub_shopify_flow_iam_policy" {
-  name = "spain_sub_shopify_flow_iam_policy"
+resource "aws_iam_policy" "spain_sub_api_gateway_s3_iam_policy" {
+  name = "spain_sub_api_gateway_s3_iam_policy"
   policy = jsonencode({
     Version = "2012-10-17",
     Statement = [
@@ -54,8 +54,8 @@ resource "aws_iam_policy" "spain_sub_shopify_flow_iam_policy" {
 
 # Attach the IAM Policy to the Role
 resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_attachment" {
-  role       = aws_iam_role.spain_sub_shopify_flow_api_role.name
-  policy_arn = aws_iam_policy.spain_sub_shopify_flow_iam_policy.arn
+  role       = aws_iam_role.spain_sub_api_gateway_s3_api_role.name
+  policy_arn = aws_iam_policy.spain_sub_api_gateway_s3_iam_policy.arn
 }
 
 # API Gateway REST API
@@ -101,7 +101,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/bronze/events/{event_type}/{event_type}.json"
-  credentials             = aws_iam_role.spain_sub_shopify_flow_api_role.arn
+  credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   # Pass event_type to the S3 path dynamically
