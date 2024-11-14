@@ -73,12 +73,12 @@ resource "aws_api_gateway_resource" "spain_sub_resource" {
 }
 
 # # Define GET Method on '/contract'
-resource "aws_api_gateway_method" "spain_sub_get_method" {
-  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.spain_sub_resource.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
+# resource "aws_api_gateway_method" "spain_sub_get_method" {
+#   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id   = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method   = "GET"
+#   authorization = "NONE"
+# }
 
 # Define POST Method on '/contract'
 resource "aws_api_gateway_method" "spain_sub_post_method" {
@@ -93,32 +93,32 @@ resource "aws_api_gateway_method" "spain_sub_post_method" {
 }
 
 
-# Define GET Integration on '/contract' with a mock response
-resource "aws_api_gateway_integration" "spain_sub_get_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.spain_sub_resource.id
-  http_method             = aws_api_gateway_method.spain_sub_get_method.http_method
-  type                    = "MOCK"  # Use MOCK if no real backend is needed
-  cache_namespace         = "my-api-cache"
-  timeout_milliseconds    = 29000
+# # Define GET Integration on '/contract' with a mock response
+# resource "aws_api_gateway_integration" "spain_sub_get_integration" {
+#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method             = aws_api_gateway_method.spain_sub_get_method.http_method
+#   type                    = "MOCK"  # Use MOCK if no real backend is needed
+#   cache_namespace         = "my-api-cache"
+#   timeout_milliseconds    = 29000
 
 
-  request_parameters = {
-    "integration.request.header.X-Authorization" = "'static'"
-  }
+#   request_parameters = {
+#     "integration.request.header.X-Authorization" = "'static'"
+#   }
 
-  request_templates = {
-    "application/json" = <<EOF
-{
-  "body": $input.json('$')
-}
-EOF
-  }
+#   request_templates = {
+#     "application/json" = <<EOF
+# {
+#   "body": $input.json('$')
+# }
+# EOF
+#   }
 
   # request_templates = {
   #   "application/json" = "{\"statusCode\": 200}"
   # }
-}
+# }
 
 # API Gateway Integration with S3 for the POST request
 resource "aws_api_gateway_integration" "spain_sub_post_integration" {
@@ -158,8 +158,8 @@ resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   depends_on  = [
-    aws_api_gateway_method.spain_sub_get_method,
-    aws_api_gateway_integration.spain_sub_get_integration,
+    # aws_api_gateway_method.spain_sub_get_method,
+    # aws_api_gateway_integration.spain_sub_get_integration,
     aws_api_gateway_method.spain_sub_post_method,
     aws_api_gateway_integration.spain_sub_post_integration
   ]
