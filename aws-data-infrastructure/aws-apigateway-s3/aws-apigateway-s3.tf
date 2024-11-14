@@ -1,4 +1,4 @@
-# Define S3 Bucket for API Gateway to access
+# Reference an existing S3 bucket
 data "aws_s3_bucket" "spain_sub_event_bucket" {
   bucket = var.bucket_name
 }
@@ -58,56 +58,67 @@ resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_att
   policy_arn = aws_iam_policy.spain_sub_api_gateway_s3_iam_policy.arn
 }
 
+
+
 # CloudWatch Log Group for API Gateway Logs
 resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
   name              = "/aws/apigateway/spain_sub_shopify_flow_s3_log"
   retention_in_days = 7
 }
 
-# IAM Role for API Gateway to assume for CloudWatch logging
-resource "aws_iam_role" "api_gateway_cloudwatch_global" {
-  name               = "api_gateway_cloudwatch_global"
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+
+data "aws_iam_policy_document" "cloudwatch_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
-# Attach CloudWatch-specific logging permissions to the CloudWatch role
+
+data "aws_iam_policy_document" "spain_sub_get_cloudwatch_policy" {
+  statement {
+    effect = "Allow"
+
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents",
+    ]
+
+    resources = ["*"]
+  }
+}
+
+resource "aws_iam_role" "api_gateway_cloudwatch_global" {
+  name               = "api_gateway_cloudwatch_global"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume_role.json
+}
+
+
+resource "aws_api_gateway_account" "api_gateway_account_settings" {
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_global.arn
+}
+
+
 resource "aws_iam_role_policy" "spain_sub_cloudwatch_policy" {
   name   = "spain_sub_cloudwatch_policy"
   role   = aws_iam_role.api_gateway_cloudwatch_global.id
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "*"
-      }
-    ]
-  })
+  policy = data.aws_iam_policy_document.spain_sub_get_cloudwatch_policy.json
 }
 
-# Configure API Gateway account settings to use the CloudWatch Logs role
-resource "aws_api_gateway_account" "api_gateway_account_settings" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_global.arn
-  depends_on          = [aws_iam_role_policy.spain_sub_cloudwatch_policy]
-}
 
-# API Gateway REST API Definition
+
+# API Gateway REST API
 resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
   name        = "spain_sub_shopify_flow_rest_api"
   description = "REST API for Shopify Flow integration"
@@ -118,9 +129,18 @@ resource "aws_api_gateway_resource" "spain_sub_resource" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
   path_part   = "contract"
+  depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]
 }
 
-# POST Method on '/contract'
+# # Define GET Method on '/contract'
+resource "aws_api_gateway_method" "spain_sub_get_method" {
+  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  resource_id   = aws_api_gateway_resource.spain_sub_resource.id
+  http_method   = "GET"
+  authorization = "NONE"
+}
+
+# Define POST Method on '/contract'
 resource "aws_api_gateway_method" "spain_sub_post_method" {
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id   = aws_api_gateway_resource.spain_sub_resource.id
@@ -128,22 +148,46 @@ resource "aws_api_gateway_method" "spain_sub_post_method" {
   authorization = "NONE"
   
   request_parameters = {
-    "method.request.querystring.event_type" = true
+    "method.request.querystring.event_type" = true  # Require event_type as a query parameter
   }
 }
 
-# API Gateway Integration for S3 on POST request
+
+# # Define GET Integration on '/contract' with a mock response
+resource "aws_api_gateway_integration" "spain_sub_get_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  resource_id             = aws_api_gateway_resource.spain_sub_resource.id
+  http_method             = aws_api_gateway_method.spain_sub_get_method.http_method
+  type                    = "MOCK"  # Use MOCK if no real backend is needed
+  cache_namespace         = "my-api-cache"
+  timeout_milliseconds    = 29000
+
+
+  request_parameters = {
+    "integration.request.header.X-Authorization" = "'static'"
+  }
+
+  request_templates = {
+    "application/json" = <<EOF
+{
+  "body": $input.json('$')
+}
+EOF
+  }
+}
+
+# API Gateway Integration with S3 for the POST request
 resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}" 
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
-  # Dynamic path for event_type and datetime
+  # Pass event_type to the S3 path dynamically
   request_parameters = {
     "integration.request.path.event_type" = "method.request.querystring.event_type"
   }
@@ -162,34 +206,39 @@ EOF
   }
 }
 
-# API Gateway Deployment to Stage
+
+# API Gateway Deployment updated to depend on the stage
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   depends_on  = [
+    aws_api_gateway_method.spain_sub_get_method,
+    aws_api_gateway_integration.spain_sub_get_integration,
     aws_api_gateway_method.spain_sub_post_method,
     aws_api_gateway_integration.spain_sub_post_integration
   ]
 }
 
-# API Gateway Stage with CloudWatch Access Logging Enabled
+
+# API Gateway Stage with CloudWatch Logging Enabled
+# API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   stage_name    = "subscriptions"
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
 
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
-    format          = jsonencode({
-      "requestId"      = "$context.requestId",
-      "ip"             = "$context.identity.sourceIp",
-      "requestTime"    = "$context.requestTime",
-      "httpMethod"     = "$context.httpMethod",
-      "resourcePath"   = "$context.resourcePath",
-      "status"         = "$context.status",
-      "responseLength" = "$context.responseLength",
-      "userAgent"      = "$context.identity.userAgent"
-    })
-  }
+#   access_log_settings {
+#     destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
+#     format          = jsonencode({
+#       "requestId"      = "$context.requestId",
+#       "ip"             = "$context.identity.sourceIp",
+#       "requestTime"    = "$context.requestTime",
+#       "httpMethod"     = "$context.httpMethod",
+#       "resourcePath"   = "$context.resourcePath",
+#       "status"         = "$context.status",
+#       "responseLength" = "$context.responseLength",
+#       "userAgent"      = "$context.identity.userAgent"
+#     })
+#   }
 
   xray_tracing_enabled = true
   tags = {
