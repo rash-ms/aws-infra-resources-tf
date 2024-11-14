@@ -95,122 +95,122 @@ resource "aws_iam_role_policy_attachment" "attach_iam_policy_to_iam_role" {
 
 
 # # Get lambda code file from s3.
-data "aws_s3_object" "lambda_code_versioned_object" {
-  bucket = "byt-test-prod"
-  key    = "spain_sub_lambda_file/spain_sub_function.zip"
-}
+# data "aws_s3_object" "lambda_code_versioned_object" {
+#   bucket = "byt-test-prod"
+#   key    = "spain_sub_lambda_file/spain_sub_function.zip"
+# }
 
-# Lambda Function
-resource "aws_lambda_function" "shopify_flow_func" {
-  s3_bucket         = data.aws_s3_object.lambda_code_versioned_object.bucket  
-  s3_key            = data.aws_s3_object.lambda_code_versioned_object.key
-  s3_object_version = data.aws_s3_object.lambda_code_versioned_object.version_id  
-  function_name     = "Spain-Sub-Shopify-Flow-Function"
-  role              = aws_iam_role.spain_sub_shopify_flow_api_role.arn
-  handler           = "spain_sub_function.lambda_handler"
-  runtime           = "python3.8"
-  depends_on        = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
+# # Lambda Function
+# resource "aws_lambda_function" "shopify_flow_func" {
+#   s3_bucket         = data.aws_s3_object.lambda_code_versioned_object.bucket  
+#   s3_key            = data.aws_s3_object.lambda_code_versioned_object.key
+#   s3_object_version = data.aws_s3_object.lambda_code_versioned_object.version_id  
+#   function_name     = "Spain-Sub-Shopify-Flow-Function"
+#   role              = aws_iam_role.spain_sub_shopify_flow_api_role.arn
+#   handler           = "spain_sub_function.lambda_handler"
+#   runtime           = "python3.8"
+#   depends_on        = [aws_iam_role_policy_attachment.attach_iam_policy_to_iam_role]
 
-  environment {
-    variables = {
-      FIVETRAN_BUCKET_NAME = "byt_test_prod"
-    }
-  }
-}
-
-
-# REST API Gateway
-resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
-  name        = "spain_sub_shopify_flow_rest_api"
-  description = "REST API for Shopify Flow integration"
-}
+#   environment {
+#     variables = {
+#       FIVETRAN_BUCKET_NAME = "byt_test_prod"
+#     }
+#   }
+# }
 
 
-resource "aws_api_gateway_resource" "contract" {
-  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
-  path_part   = "contract"
-  depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]  
-}
+# # REST API Gateway
+# resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
+#   name        = "spain_sub_shopify_flow_rest_api"
+#   description = "REST API for Shopify Flow integration"
+# }
 
-# Define GET method on "/subscriptions/contract"
-resource "aws_api_gateway_method" "get_contract" {
-  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.contract.id
-  http_method   = "GET"
-  authorization = "NONE"
-}
 
-# Define POST method on "/subscriptions/contract"
-resource "aws_api_gateway_method" "post_contract" {
-  rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id   = aws_api_gateway_resource.contract.id
-  http_method   = "POST"
-  authorization = "NONE"
-}
+# resource "aws_api_gateway_resource" "contract" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
+#   path_part   = "contract"
+#   depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]  
+# }
 
-# Integration for GET method with Lambda
-resource "aws_api_gateway_integration" "lambda_get_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.contract.id
-  http_method             = aws_api_gateway_method.get_contract.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
-}
+# # Define GET method on "/subscriptions/contract"
+# resource "aws_api_gateway_method" "get_contract" {
+#   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id   = aws_api_gateway_resource.contract.id
+#   http_method   = "GET"
+#   authorization = "NONE"
+# }
 
-# Integration for POST method with Lambda
-resource "aws_api_gateway_integration" "lambda_post_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.contract.id
-  http_method             = aws_api_gateway_method.post_contract.http_method
-  integration_http_method = "POST"
-  type                    = "AWS_PROXY"
-  uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
-}
+# # Define POST method on "/subscriptions/contract"
+# resource "aws_api_gateway_method" "post_contract" {
+#   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id   = aws_api_gateway_resource.contract.id
+#   http_method   = "POST"
+#   authorization = "NONE"
+# }
 
-# Lambda Permission for API Gateway to invoke the function
-resource "aws_lambda_permission" "api_gateway_invoke" {
-  statement_id  = "AllowAPIGatewayInvoke"
-  action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.shopify_flow_func.function_name
-  principal     = "apigateway.amazonaws.com"
-  source_arn    = "${aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.execution_arn}/*"
-}
+# # Integration for GET method with Lambda
+# resource "aws_api_gateway_integration" "lambda_get_integration" {
+#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id             = aws_api_gateway_resource.contract.id
+#   http_method             = aws_api_gateway_method.get_contract.http_method
+#   integration_http_method = "POST"
+#   type                    = "AWS_PROXY"
+#   uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
+# }
 
-# Deploy the API
-resource "aws_api_gateway_deployment" "spain_sub_shopify_flow_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  depends_on = [
-    aws_api_gateway_integration.lambda_get_integration,
-    aws_api_gateway_integration.lambda_post_integration
-  ]
-}
+# # Integration for POST method with Lambda
+# resource "aws_api_gateway_integration" "lambda_post_integration" {
+#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id             = aws_api_gateway_resource.contract.id
+#   http_method             = aws_api_gateway_method.post_contract.http_method
+#   integration_http_method = "POST"
+#   type                    = "AWS_PROXY"
+#   uri                     = aws_lambda_function.shopify_flow_func.invoke_arn
+# }
 
-# CloudWatch log group for API Gateway logs
-resource "aws_cloudwatch_log_group" "spain_sub_shopify_flow_api_gateway_logs" {
-  name              = "/aws/apigateway/spain_sub_shopify_flow_rest_api"
-  retention_in_days = 7
-}
+# # Lambda Permission for API Gateway to invoke the function
+# resource "aws_lambda_permission" "api_gateway_invoke" {
+#   statement_id  = "AllowAPIGatewayInvoke"
+#   action        = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.shopify_flow_func.function_name
+#   principal     = "apigateway.amazonaws.com"
+#   source_arn    = "${aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.execution_arn}/*"
+# }
 
-# Enable API Gateway logging for the stage
-resource "aws_api_gateway_stage" "spain_sub_shopify_flow_stage_logs" {
-  stage_name = "subscriptions"
-  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  deployment_id = aws_api_gateway_deployment.spain_sub_shopify_flow_deployment.id
+# # Deploy the API
+# resource "aws_api_gateway_deployment" "spain_sub_shopify_flow_deployment" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   depends_on = [
+#     aws_api_gateway_integration.lambda_get_integration,
+#     aws_api_gateway_integration.lambda_post_integration
+#   ]
+# }
 
-  # access_log_settings {
-  #   destination_arn = aws_cloudwatch_log_group.spain_sub_shopify_flow_api_gateway_logs.arn
-  #   format = jsonencode({
-  #     "requestId"      = "$context.requestId",
-  #     "ip"             = "$context.identity.sourceIp",
-  #     "requestTime"    = "$context.requestTime",
-  #     "domainName"     = "$context.domainName",
-  #     "httpMethod"     = "$context.httpMethod",
-  #     "routeKey"       = "$context.routeKey",
-  #     "status"         = "$context.status",
-  #     "protocol"       = "$context.protocol",
-  #     "responseLength" = "$context.responseLength"
-  #   })
-  # }
-}
+# # CloudWatch log group for API Gateway logs
+# resource "aws_cloudwatch_log_group" "spain_sub_shopify_flow_api_gateway_logs" {
+#   name              = "/aws/apigateway/spain_sub_shopify_flow_rest_api"
+#   retention_in_days = 7
+# }
+
+# # Enable API Gateway logging for the stage
+# resource "aws_api_gateway_stage" "spain_sub_shopify_flow_stage_logs" {
+#   stage_name = "subscriptions"
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   deployment_id = aws_api_gateway_deployment.spain_sub_shopify_flow_deployment.id
+
+#   # access_log_settings {
+#   #   destination_arn = aws_cloudwatch_log_group.spain_sub_shopify_flow_api_gateway_logs.arn
+#   #   format = jsonencode({
+#   #     "requestId"      = "$context.requestId",
+#   #     "ip"             = "$context.identity.sourceIp",
+#   #     "requestTime"    = "$context.requestTime",
+#   #     "domainName"     = "$context.domainName",
+#   #     "httpMethod"     = "$context.httpMethod",
+#   #     "routeKey"       = "$context.routeKey",
+#   #     "status"         = "$context.status",
+#   #     "protocol"       = "$context.protocol",
+#   #     "responseLength" = "$context.responseLength"
+#   #   })
+#   # }
+# }
