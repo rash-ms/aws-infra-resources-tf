@@ -236,7 +236,8 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
       "resourcePath"   = "$context.resourcePath",
       "status"         = "$context.status",
       "responseLength" = "$context.responseLength",
-      "userAgent"      = "$context.identity.userAgent"
+      "userAgent"      = "$context.identity.userAgent",
+      "error"          = "$context.error.message"
     })
   }
 
@@ -246,4 +247,17 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   }
 
   depends_on = [aws_api_gateway_account.api_gateway_account_settings]
+}
+
+# Configure Method Settings for Detailed Logging
+resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
+  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
+  method_path = "*/*"  # Apply to all methods
+
+  settings {
+    metrics_enabled       = true               # Enables CloudWatch metrics for this method
+    logging_level         = "INFO"             # Set to "ERROR" for error-only logs, "INFO" for detailed logs
+    data_trace_enabled    = true               # Enables detailed request/response logging
+  }
 }
