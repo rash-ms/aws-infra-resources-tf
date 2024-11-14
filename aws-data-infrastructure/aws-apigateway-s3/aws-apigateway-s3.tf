@@ -138,17 +138,31 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   }
 
   # Mapping template for the S3 object key and body
-  request_templates = {
-    "application/json" = <<EOF
+  # Mapping template for the S3 object key and body
+request_templates = {
+  "application/json" = <<EOF
 #set($datetime = $context.requestTimeEpoch)
+#set($eventType = $input.params('event_type'))
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "bronze/events/$input.params('event_type')/$input.params('event_type')_$datetime.json",
-  "body": "$util.base64Encode($input.body)"
+  "key": "bronze/events/$eventType/$eventType_$datetime.json",
+  "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
   }
 }
+
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($datetime = $context.requestTimeEpoch)
+# {
+#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
+#   "key": "bronze/events/$input.params('event_type')/$input.params('event_type')_$datetime.json",
+#   "body": "$util.base64Encode($input.body)"
+# }
+# EOF
+#   }
+# }
 
 # API Gateway Deployment updated to depend on the stage
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
