@@ -115,12 +115,13 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 #set($datetime = $context.requestTimeEpoch)
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "bronze/events/$input.params('event_type')/$input.params('event_type')_${datetime}.json",
+  "key": "bronze/events/$input.params('event_type')/$input.params('event_type')_$datetime.json",
   "body": "$util.base64Encode($input.body)"
 }
 EOF
   }
 }
+
 
 
 # CloudWatch Log Group for API Gateway Logs
