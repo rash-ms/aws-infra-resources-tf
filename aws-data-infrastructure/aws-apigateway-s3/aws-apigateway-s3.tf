@@ -58,6 +58,13 @@ resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_att
   policy_arn = aws_iam_policy.spain_sub_api_gateway_s3_iam_policy.arn
 }
 
+
+# CloudWatch Log Group for API Gateway Logs
+resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
+  name              = "/aws/apigateway/spain_sub_shopify_flow_rest_api"
+  retention_in_days = 7
+}
+
 # New Dedicated IAM Role for CloudWatch Logs (required for API Gateway logging)
 resource "aws_iam_role" "api_gateway_cloudwatch_role" {
   name = "api_gateway_cloudwatch_role"
@@ -76,6 +83,7 @@ resource "aws_iam_role" "api_gateway_cloudwatch_role" {
   })
 }
 
+
 # Attach CloudWatch-specific logging permissions to the new role
 resource "aws_iam_role_policy" "api_gateway_cloudwatch_role_policy" {
   name = "api_gateway_cloudwatch_logging_policy"
@@ -89,9 +97,10 @@ resource "aws_iam_role_policy" "api_gateway_cloudwatch_role_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "events:PutEvents"
         ],
-        Resource = "*"
+        Resource = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
       }
     ]
   })
@@ -208,12 +217,6 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
     aws_api_gateway_method.spain_sub_post_method,
     aws_api_gateway_integration.spain_sub_post_integration
   ]
-}
-
-# CloudWatch Log Group for API Gateway Logs
-resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
-  name              = "/aws/apigateway/spain_sub_shopify_flow_rest_api"
-  retention_in_days = 7
 }
 
 
