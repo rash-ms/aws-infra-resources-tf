@@ -59,59 +59,64 @@ resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_att
 }
 
 
+
 # CloudWatch Log Group for API Gateway Logs
 resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
   name              = "/aws/apigateway/spain_sub_shopify_flow_rest_api"
   retention_in_days = 7
 }
 
-# New Dedicated IAM Role for CloudWatch Logs (required for API Gateway logging)
-resource "aws_iam_role" "api_gateway_cloudwatch_role" {
-  name = "api_gateway_cloudwatch_role"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
+data "aws_iam_policy_document" "cloudwatch_assume_role" {
+  statement {
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["apigateway.amazonaws.com"]
+    }
+
+    actions = ["sts:AssumeRole"]
+  }
 }
 
 
-# Attach CloudWatch-specific logging permissions to the new role
-resource "aws_iam_role_policy" "api_gateway_cloudwatch_role_policy" {
-  name = "api_gateway_cloudwatch_logging_policy"
-  role = aws_iam_role.api_gateway_cloudwatch_role.id
+data "aws_iam_policy_document" "spain_sub_get_cloudwatch_policy" {
+  statement {
+    effect = "Allow"
 
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents",
-          "events:PutEvents"
-        ],
-        Resource = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
-      }
+    actions = [
+      "logs:CreateLogGroup",
+      "logs:CreateLogStream",
+      "logs:DescribeLogGroups",
+      "logs:DescribeLogStreams",
+      "logs:PutLogEvents",
+      "logs:GetLogEvents",
+      "logs:FilterLogEvents",
     ]
-  })
+
+    resources = ["*"]
+  }
 }
 
-# Configure API Gateway account settings to use the CloudWatch Logs role
+resource "aws_iam_role" "api_gateway_cloudwatch_global" {
+  name               = "api_gateway_cloudwatch_global"
+  assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume_role.json
+}
+
 
 resource "aws_api_gateway_account" "api_gateway_account_settings" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_role.arn
-  depends_on          = [aws_iam_role_policy.api_gateway_cloudwatch_role_policy]
+  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_global.arn
 }
+
+
+resource "aws_iam_role_policy" "spain_sub_cloudwatch_policy" {
+  name   = "spain_sub_cloudwatch_policy"
+  role   = aws_iam_role.api_gateway_cloudwatch_global.id
+  policy = data.aws_iam_policy_document.spain_sub_get_cloudwatch_policy.json
+}
+
+
 
 # API Gateway REST API
 resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
