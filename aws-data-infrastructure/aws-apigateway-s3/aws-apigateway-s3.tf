@@ -131,9 +131,18 @@ resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
 }
 
 # API Gateway Deployment and Stage with CloudWatch Logging Enabled
+# resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   depends_on  = [aws_api_gateway_integration.spain_sub_post_integration]
+#   stage_name  = "subscriptions"
+# }
+
+
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  depends_on  = [aws_api_gateway_integration.spain_sub_post_integration]
+  depends_on  = [
+    aws_api_gateway_method.spain_sub_post_method,
+    aws_api_gateway_integration.spain_sub_post_integration
+  ]
   stage_name  = "subscriptions"
 }
-
