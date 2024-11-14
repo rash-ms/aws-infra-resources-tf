@@ -100,7 +100,7 @@ resource "aws_iam_role_policy" "api_gateway_cloudwatch_role_policy" {
 # Configure API Gateway account settings to use the CloudWatch Logs role
 resource "aws_api_gateway_account" "api_gateway_account_settings" {
   cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_role.arn
-  depends_on          = [aws_iam_role_policy_attachment.spain_sub_api_gateway_role_policy_attachment]
+  depends_on          = [aws_iam_role_policy.api_gateway_cloudwatch_role_policy]
 }
 
 # API Gateway REST API
