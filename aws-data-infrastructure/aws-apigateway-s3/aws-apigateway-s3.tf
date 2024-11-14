@@ -118,7 +118,7 @@ EOF
   # request_templates = {
   #   "application/json" = "{\"statusCode\": 200}"
   # }
-  
+
 }
 
 # API Gateway Integration with S3 for the POST request
@@ -173,25 +173,25 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage" {
   rest_api_id  = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
 
-  access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
-    format          = jsonencode({
-      "requestId"      = "$context.requestId",
-      "ip"             = "$context.identity.sourceIp",
-      "requestTime"    = "$context.requestTime",
-      "httpMethod"     = "$context.httpMethod",
-      "resourcePath"   = "$context.resourcePath",
-      "status"         = "$context.status",
-      "responseLength" = "$context.responseLength",
-      "userAgent"      = "$context.identity.userAgent",
-      "requestBody"    = "$context.requestBody"
-    })
-  }
+  # access_log_settings {
+  #   destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
+  #   format          = jsonencode({
+  #     "requestId"      = "$context.requestId",
+  #     "ip"             = "$context.identity.sourceIp",
+  #     "requestTime"    = "$context.requestTime",
+  #     "httpMethod"     = "$context.httpMethod",
+  #     "resourcePath"   = "$context.resourcePath",
+  #     "status"         = "$context.status",
+  #     "responseLength" = "$context.responseLength",
+  #     "userAgent"      = "$context.identity.userAgent",
+  #     "requestBody"    = "$context.requestBody"
+  #   })
+  # }
   
   # Enable execution logging
   xray_tracing_enabled = true
   tags = {
-    "Name" = "spain_sub_shopify_flow_stage"
+    "Name" = "spain_sub_shopify_flow_log"
   }
 }
 
