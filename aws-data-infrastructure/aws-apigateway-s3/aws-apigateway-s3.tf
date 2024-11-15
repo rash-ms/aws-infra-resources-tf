@@ -170,7 +170,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($pathName = "bronze")
 #set($object = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
 {
-  "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket}",
+  "bucket": "${var.bucket_name}",
   "key": "$object",
   "body": $input.json('$')
 }
