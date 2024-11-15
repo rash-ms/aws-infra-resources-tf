@@ -37,6 +37,7 @@ resource "aws_iam_policy" "spain_sub_api_gateway_s3_iam_policy" {
         Resource = [
           "arn:aws:s3:::byt-test-prod",
           "arn:aws:s3:::byt-test-prod/*",
+          "arn:aws:s3:::byt-test-prod/bronze/*",
           "arn:aws:s3:::${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/*"
         ]
       },
