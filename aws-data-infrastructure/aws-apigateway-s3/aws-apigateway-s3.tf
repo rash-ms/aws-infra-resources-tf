@@ -194,9 +194,9 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 
   request_templates = {
     "application/json" = <<EOF
-#set($eventType = $input.params('event_type') ?: "unknown_event")
+#set($eventType = $input.json('$.event_type') ?: "unknown_event")
 #set($datetime = $context.requestTimeEpoch)
-#set($prefix = "bronze/")
+#set($prefix = "/bronze/")
 #set($path = $prefix + $eventType + "/")
 #set($filename = $eventType + "_" + $datetime + ".json")
 #set($key = $path + $filename)
@@ -206,7 +206,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
-  }
+}
 }
 
 
