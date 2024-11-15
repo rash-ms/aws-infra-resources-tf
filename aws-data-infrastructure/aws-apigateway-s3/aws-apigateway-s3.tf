@@ -222,8 +222,12 @@ EOF
   }
 
   # Define request parameters in locals
+  # request_parameters = {
+  #   "integration.request.header.Content-Type" = "'application/json'"
+  # }
+
   request_parameters = {
-    "integration.request.header.Content-Type" = "'application/json'"
+    "integration.request.header.Content-Type" = "'multipart/form-data'"
   }
 
   # Optional: Compute a hash for auto-detection of changes
@@ -310,6 +314,6 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
     metrics_enabled       = true               # Enables CloudWatch metrics for this method
     logging_level         = "INFO"             # Set to "ERROR" for error-only logs, "INFO" for detailed logs
     data_trace_enabled    = true               # Enables detailed request/response logging
-    caching_enabled = false
+    caching_enabled       = false
   }
 }
