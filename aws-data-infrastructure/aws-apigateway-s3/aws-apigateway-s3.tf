@@ -154,15 +154,15 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
-  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
+  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
-  # request_parameters = {
-  #   # "integration.request.header.Content-Type" = "'application/json'"
-  #   "integration.request.path.object" = "method.request.path.object"
-  # }
+  request_parameters = {
+    # "integration.request.header.Content-Type" = "'application/json'"
+    "integration.request.path.object" = "method.request.path.object"
+  }
 
   request_templates = {
     "application/json" = <<EOF
