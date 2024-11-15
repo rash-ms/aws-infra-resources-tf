@@ -211,7 +211,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
   type                    = "AWS"
   integration_http_method = "POST"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}/{event_type}/{event_type}_$context.requestTimeEpoch.json"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 
   request_parameters = {
@@ -220,9 +220,11 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 
   request_templates = {
     "application/json" = <<EOF
+#set($datetime = $context.requestTimeEpoch)
+#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
 {
    "bucket": "${var.bucket_name}",
-   "key": "$util.escapeJavaScript($input.path('$.event_type'))/$util.escapeJavaScript($input.path('$.event_type'))_$context.requestTimeEpoch.json",
+   "key": "$key",
    "body": $input.body
 }
 EOF
