@@ -45,4 +45,5 @@ jobs:
         run: |
           aws sts get-caller-identity
           make init
+          make plan
           make apply
