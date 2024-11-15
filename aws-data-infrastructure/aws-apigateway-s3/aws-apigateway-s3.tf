@@ -60,7 +60,6 @@ resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_att
 }
 
 
-
 # CloudWatch Log Group for API Gateway Logs
 resource "aws_cloudwatch_log_group" "spain_sub_api_gateway_log_group" {
   name              = "/aws/apigateway/spain_sub_shopify_flow_s3_log"
@@ -195,9 +194,10 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 request_templates = {
   "application/json" = <<EOF
 #set($datetime = $context.requestTimeEpoch)
+#set($key = "subscription_created_" + $datetime + ".json")
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "subscription_created_$datetime.json",
+  "key": "$key",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
