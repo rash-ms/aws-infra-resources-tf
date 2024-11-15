@@ -165,11 +165,13 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_templates = {
     "application/json" = <<EOF
-#set($inputRoot = $input.path('$'))
+
+#set($pathName = "bronze")
+#set($eventType = $input.path('$.event_type'))
 #set($timestamp = $context.requestTimeEpoch)
-#set($eventType = $inputRoot.event_type)
+#set($object = "${pathName}/${eventType}/${eventType}_$timestamp.json")
 {
-  "object": "bronze/${eventType}/${eventType}_$timestamp.json",
+  "object": "$object",
   "body": $input.json('$')
 }
 EOF
