@@ -209,9 +209,9 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
-  type                 = "AWS"
+  type                    = "AWS"
   integration_http_method = "POST"
-  uri                  = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}/{event_type}/{event_type}_${timestamp}.json"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}/{event_type}/{event_type}_$context.requestTimeEpoch.json"
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'"
