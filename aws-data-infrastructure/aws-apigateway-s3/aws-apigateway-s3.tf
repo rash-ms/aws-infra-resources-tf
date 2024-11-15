@@ -206,7 +206,46 @@ EOF
 # }
 
 
+# locals {
+#   request_template_content = <<EOF
+# #set($datetime = $context.requestTimeEpoch)
+# #set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
+# {
+#    "bucket": "${var.bucket_name}",
+#    "key": "$key",
+#    "body": $input.body
+# }
+# EOF
+
+#   request_templates = {
+#     "application/json" = local.request_template_content
+#   }
+
+#   # Define request parameters in locals
+#   # request_parameters = {
+#   #   "integration.request.header.Content-Type" = "'application/json'"
+#   # }
+
+#   request_parameters = {
+#     "integration.request.header.Content-Type" = "'multipart/form-data'"
+#   }
+
+#   # Optional: Compute a hash for auto-detection of changes
+#   request_template_hash = md5(local.request_template_content)
+# }
+
+
+# # Generate a random ID based on the template content for automatic detection
+# resource "random_id" "template_change_id" {
+#   keepers = {
+#     request_template_hash = local.request_template_hash
+#   }
+#   byte_length = 8
+# }
+
+
 locals {
+  # Define the request template content
   request_template_content = <<EOF
 #set($datetime = $context.requestTimeEpoch)
 #set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
@@ -217,11 +256,7 @@ locals {
 }
 EOF
 
-  request_templates = {
-    "application/json" = local.request_template_content
-  }
-
-  # Define request parameters in locals
+  # Define request parameters
   # request_parameters = {
   #   "integration.request.header.Content-Type" = "'application/json'"
   # }
@@ -230,15 +265,22 @@ EOF
     "integration.request.header.Content-Type" = "'multipart/form-data'"
   }
 
-  # Optional: Compute a hash for auto-detection of changes
-  request_template_hash = md5(local.request_template_content)
+  # Combine template content and parameters as a string for hashing
+  combined_content_for_hashing = "${local.request_template_content}${jsonencode(local.request_parameters)}"
+
+  # Compute a hash of the combined content for automatic detection
+  combined_content_hash = md5(local.combined_content_for_hashing)
+
+  # Define request templates as a map
+  request_templates = {
+    "application/json" = local.request_template_content
+  }
 }
 
-
-# Generate a random ID based on the template content for automatic detection
-resource "random_id" "template_change_id" {
+# Generate a random ID based on the combined content hash
+resource "random_id" "content_change_id" {
   keepers = {
-    request_template_hash = local.request_template_hash
+    combined_content_hash = local.combined_content_hash
   }
   byte_length = 8
 }
@@ -259,7 +301,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   passthrough_behavior = "WHEN_NO_MATCH"
 
   # Force recreation when the random_id changes
-  depends_on = [random_id.template_change_id]
+  depends_on = [random_id.content_change_id]
 
 
 }
