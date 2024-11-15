@@ -214,9 +214,12 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 
+#   request_parameters = {
+#     "integration.request.header.Content-Type" = "'application/json'"
+#   }
   request_parameters = {
-    "integration.request.header.Content-Type" = "'application/json'"
-  }
+  "integration.request.header.Content-Type" = "'multipart/form-data'"
+}
 
   request_templates = {
     "application/json" = <<EOF
