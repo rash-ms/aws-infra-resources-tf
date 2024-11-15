@@ -141,9 +141,10 @@ resource "aws_api_gateway_method" "spain_sub_put_method" {
   authorization = "NONE"
   
   request_parameters = {
-    "method.request.querystring.event_type" = true,  
-    "method.request.path.foldername" = true,
-    "method.request.path.filename"   = true
+    "method.request.querystring.event_type" = true, 
+    "method.request.path.object_key" = true
+    # "method.request.path.foldername" = true,
+    # "method.request.path.filename"   = true
   }
 }
 
@@ -157,15 +158,17 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   type                    = "AWS"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{foldername}/{filename}"
+  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{foldername}/{filename}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object_key}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
     # "integration.request.header.Content-Type" = "'application/json'"
     # "integration.request.path.object" = "method.request.path.object"
-    "integration.request.path.foldername" = "method.request.path.foldername",
-    "integration.request.path.filename"   = "method.request.path.filename",
+    # "integration.request.path.foldername" = "method.request.path.foldername",
+    # "integration.request.path.filename"   = "method.request.path.filename",
+    "integration.request.path.object_key" = "method.request.path.object_key",
     "integration.request.header.Content-Type" = "'application/json'"
   }
 
@@ -174,18 +177,33 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
-#set($foldername = $pathName + "/" + $eventType)
-#set($filename = $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.foldername = $foldername)
-#set($context.requestOverride.path.filename = $filename)
+#set($object_key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
+#set($context.requestOverride.path.object_key = $object_key)
 {
-  "foldername": "$foldername",
-  "filename": "$filename",
+  "object_key": "$object_key",
   "body": $input.json('$')
 }
 EOF
   }
 }
+
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($timestamp = $context.requestTimeEpoch)
+# #set($eventType = $input.path('$.event_type'))
+# #set($pathName = "bronze")
+# #set($foldername = $pathName + "/" + $eventType)
+# #set($filename = $eventType + "_" + $timestamp + ".json")
+# #set($context.requestOverride.path.foldername = $foldername)
+# #set($context.requestOverride.path.filename = $filename)
+# {
+#   "foldername": "$foldername",
+#   "filename": "$filename",
+#   "body": $input.json('$')
+# }
+# EOF
+#   }
+# }
 
 
 #   request_templates = {
