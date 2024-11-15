@@ -183,28 +183,55 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}" 
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
-  # Pass event_type to the S3 path dynamically
   request_parameters = {
-    "integration.request.path.event_type" = "method.request.querystring.event_type"
+    "integration.request.header.Content-Type" = "'application/json'"
   }
 
-  # Mapping template for the S3 object key and body
   request_templates = {
     "application/json" = <<EOF
-#set($datetime = $context.requestTimeEpoch)
-#set($eventType = $input.params('event_type'))
+#set($eventType = $input.json('$.event_type'))
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "bronze/$eventType/$eventType_$datetime.json",
+  "key": "bronze/$eventType/${eventType}_$context.requestTimeEpoch.json",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
   }
 }
+
+
+# resource "aws_api_gateway_integration" "spain_sub_post_integration" {
+#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
+#   integration_http_method = "PUT"  # S3 requires PUT for object creation
+#   type                    = "AWS"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}" 
+#   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
+#   passthrough_behavior    = "WHEN_NO_MATCH"
+
+#   # Pass event_type to the S3 path dynamically
+#   request_parameters = {
+#     "integration.request.path.event_type" = "method.request.querystring.event_type"
+#   }
+
+#   # Mapping template for the S3 object key and body
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($datetime = $context.requestTimeEpoch)
+# #set($eventType = $input.params('event_type'))
+# {
+#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
+#   "key": "bronze/$eventType/$eventType_$datetime.json",
+#   "body": "$util.base64Encode($input.json('$'))"
+# }
+# EOF
+#   }
+# }
 
 
 # API Gateway Deployment updated to depend on the stage
@@ -218,8 +245,6 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   ]
 }
 
-
-# API Gateway Stage with CloudWatch Logging Enabled
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   stage_name    = "subscriptions"
