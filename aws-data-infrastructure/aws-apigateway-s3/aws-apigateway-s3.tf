@@ -154,13 +154,16 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
+  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${aws_s3_bucket.api_gateway_bucket.bucket}/{foldername}/{filename}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
     # "integration.request.header.Content-Type" = "'application/json'"
-    "integration.request.path.object" = "method.request.path.object"
+    # "integration.request.path.object" = "method.request.path.object"
+    "integration.request.path.foldername" = "method.request.path.foldername"
+    "integration.request.path.filename"   = "method.request.path.filename"
   }
 
   request_templates = {
@@ -168,10 +171,11 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
-#set($object = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
+#set($foldername = $pathName + "/" + $eventType)
+#set($filename = $eventType + "_" + $timestamp + ".json")
 {
-  "bucket": "${var.bucket_name}",
-  "key": "$object",
+  "foldername": "$foldername",
+  "filename": "$filename",
   "body": $input.json('$')
 }
 EOF
@@ -179,18 +183,19 @@ EOF
 }
 
 
-# request_templates = {
-#   "application/json" = <<EOF
-# #set($datetime = $context.requestTimeEpoch)
-# #set($key = "bronze/subscription_created_" + $datetime + ".json")
-# #set($key = bronze/$input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($timestamp = $context.requestTimeEpoch)
+# #set($eventType = $input.path('$.event_type'))
+# #set($pathName = "bronze")
+# #set($object = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
 # {
-#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-#   "object": "$key",
+#   "bucket": "${var.bucket_name}",
+#   "key": "$object",
 #   "body": $input.json('$')
 # }
 # EOF
-# }
+#   }
 # }
 
 
