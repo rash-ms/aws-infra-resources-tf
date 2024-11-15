@@ -8,7 +8,7 @@ variable "bucket_name" {
 
 variable "integration_version" {
   description = "A version number to force update on API Gateway integration."
-  default     = "1"  # Increment this whenever you modify request_templates or request_parameters
+  default     = "2"  # Increment this whenever you modify request_templates or request_parameters
 }
 
 # variable "region" {

@@ -177,38 +177,25 @@ EOF
   }
 }
 
-# # API Gateway Integration with S3 for the POST request
-# resource "aws_api_gateway_integration" "spain_sub_post_integration" {
-#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-#   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
-#   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
-#   integration_http_method = "PUT"  # S3 requires PUT for object creation
-#   type                    = "AWS"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
-#   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
-#   passthrough_behavior    = "WHEN_NO_MATCH"
-
-#   request_parameters = {
-#     "integration.request.header.Content-Type" = "'application/json'"
-#   }
-
-# request_templates = {
-#   "application/json" = <<EOF
-# #set($datetime = $context.requestTimeEpoch)
-# #set($key = "bronze/subscription_created_" + $datetime + ".json")
-# {
-#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-#   "key": "$key",
-#   "body": "$util.base64Encode($input.json('$'))"
-# }
-# EOF
-# }
-# }
-
-variable "integration_version" {
-  description = "A version number to force update on API Gateway integration."
-  default     = "1"  # Increment this whenever you modify request_templates or request_parameters
+locals {
+  request_template_content = <<EOF
+#set($datetime = $context.requestTimeEpoch)
+#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
+{
+   "bucket": "${var.bucket_name}",
+   "key": "$key",
+   "body": $input.body
 }
+EOF
+
+  request_templates = {
+    "application/json" = local.request_template_content
+  }
+
+  # Optional: Compute a hash for auto-detection of changes
+  request_template_hash = md5(local.request_template_content)
+}
+
 
 resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
@@ -219,30 +206,12 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 
-#   request_parameters = {
-#     "integration.request.header.Content-Type" = "'application/json'"
-#   }
-  request_parameters = {
-  "integration.request.header.Content-Type" = "'multipart/form-data'"
-}
-
-  request_templates = {
-    "application/json" = <<EOF
-#set($datetime = $context.requestTimeEpoch)
-#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
-{
-   "bucket": "${var.bucket_name}",
-   "key": "$key",
-   "body": $input.body
-}
-EOF
-  }
+  request_templates = local.request_templates
 
   passthrough_behavior = "WHEN_NO_MATCH"
-
-  lifecycle {
-    replace_triggered_by = [var.integration_version]  # Trigger replacement based on this variable
-  }
+  # lifecycle {
+  #   replace_triggered_by = [local.request_template_hash]  # Trigger replacement based on template hash
+  # }
 
 
 }
