@@ -194,7 +194,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 request_templates = {
   "application/json" = <<EOF
 #set($datetime = $context.requestTimeEpoch)
-#set($key = "subscription_created_" + $datetime + ".json")
+#set($key = "subscription_creat_" + $datetime + ".json")
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
   "key": "$key",
