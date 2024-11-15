@@ -205,6 +205,11 @@ EOF
 # }
 # }
 
+variable "integration_version" {
+  description = "A version number to force update on API Gateway integration."
+  default     = "1"  # Increment this whenever you modify request_templates or request_parameters
+}
+
 resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
@@ -234,6 +239,12 @@ EOF
   }
 
   passthrough_behavior = "WHEN_NO_MATCH"
+
+  lifecycle {
+    replace_triggered_by = [var.integration_version]  # Trigger replacement based on this variable
+  }
+
+
 }
 
 # API Gateway Deployment updated to depend on the stage
@@ -286,5 +297,6 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
     metrics_enabled       = true               # Enables CloudWatch metrics for this method
     logging_level         = "INFO"             # Set to "ERROR" for error-only logs, "INFO" for detailed logs
     data_trace_enabled    = true               # Enables detailed request/response logging
+    caching_enabled = false
   }
 }
