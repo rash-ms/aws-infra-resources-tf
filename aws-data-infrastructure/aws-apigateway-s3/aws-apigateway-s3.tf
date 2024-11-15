@@ -142,6 +142,8 @@ resource "aws_api_gateway_method" "spain_sub_put_method" {
   
   request_parameters = {
     "method.request.querystring.event_type" = true  # Require event_type as a query parameter
+    "method.request.path.foldername" = true
+    "method.request.path.filename"   = true
   }
 }
 
@@ -173,8 +175,6 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($pathName = "bronze")
 #set($foldername = $pathName + "/" + $eventType)
 #set($filename = $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.foldername = $foldername)
-#set($context.requestOverride.path.filename = $filename)
 {
   "foldername": "$foldername",
   "filename": "$filename",
@@ -209,6 +209,8 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
     aws_api_gateway_integration.spain_sub_put_integration
   ]
 }
+
+
 
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {

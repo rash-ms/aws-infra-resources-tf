@@ -10,6 +10,6 @@
 #  value = aws_iam_policy.spain_sub_api_gateway_s3_iam_policy.arn
 # }
 
-# output "api_endpoint" {
-#   value = "${aws_api_gateway_deployment.spain_sub_api_gateway_deployment.invoke_url}/contract"
-# }
+output "api_endpoint" {
+  value = "${aws_api_gateway_deployment.spain_sub_api_gateway_deployment.invoke_url}/{foldername}/{filename}"
+}
