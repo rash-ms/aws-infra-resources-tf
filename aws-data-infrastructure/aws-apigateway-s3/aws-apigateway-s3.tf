@@ -156,10 +156,10 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   http_method             = aws_api_gateway_method.spain_sub_put_method.http_method
   integration_http_method = "PUT"  # S3 requires PUT for object creation
   type                    = "AWS"
-  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{foldername}/{filename}"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object_key}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object_key}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
@@ -178,7 +178,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
 #set($object_key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.object_key = $object_key.replace("%2F", "/"))
+#set($context.requestOverride.path = $object_key)
 {
   "object_key": "$object_key",
   "body": $input.json('$')
