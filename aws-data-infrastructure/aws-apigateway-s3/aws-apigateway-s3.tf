@@ -196,7 +196,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
     "application/json" = <<EOF
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "bronze/test_data.json",
+  "key": "bronze/sub_created.json",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
