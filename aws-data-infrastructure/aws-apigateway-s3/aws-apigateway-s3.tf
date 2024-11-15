@@ -178,7 +178,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
 #set($object_key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.object_key = $object_key)
+#set($context.requestOverride.path.object_key = $object_key.replace("%2F", "/"))
 {
   "object_key": "$object_key",
   "body": $input.json('$')
