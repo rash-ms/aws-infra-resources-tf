@@ -6,6 +6,10 @@ variable "bucket_name" {
   default = "byt-test-prod"  # Name of the existing S3 bucket
 }
 
+variable "integration_version" {
+  description = "A version number to force update on API Gateway integration."
+  default     = "2"  # Increment this whenever you modify request_templates or request_parameters
+}
 
 # variable "region" {
 #   type = string

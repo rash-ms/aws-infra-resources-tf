@@ -205,6 +205,41 @@ EOF
 # }
 # }
 
+
+locals {
+  request_template_content = <<EOF
+#set($datetime = $context.requestTimeEpoch)
+#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
+{
+   "bucket": "${var.bucket_name}",
+   "key": "$key",
+   "body": $input.body
+}
+EOF
+
+  request_templates = {
+    "application/json" = local.request_template_content
+  }
+
+  # Define request parameters in locals
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/json'"
+  }
+
+  # Optional: Compute a hash for auto-detection of changes
+  request_template_hash = md5(local.request_template_content)
+}
+
+
+# Generate a random ID based on the template content for automatic detection
+resource "random_id" "template_change_id" {
+  keepers = {
+    request_template_hash = local.request_template_hash
+  }
+  byte_length = 8
+}
+
+
 resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
@@ -214,26 +249,15 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 
-#   request_parameters = {
-#     "integration.request.header.Content-Type" = "'application/json'"
-#   }
-  request_parameters = {
-  "integration.request.header.Content-Type" = "'multipart/form-data'"
-}
-
-  request_templates = {
-    "application/json" = <<EOF
-#set($datetime = $context.requestTimeEpoch)
-#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
-{
-   "bucket": "${var.bucket_name}",
-   "key": "$key",
-   "body": $input.body
-}
-EOF
-  }
+  request_templates = local.request_templates
+  request_parameters = local.request_parameters  # Use the local variable for parameters
 
   passthrough_behavior = "WHEN_NO_MATCH"
+
+  # Force recreation when the random_id changes
+  depends_on = [random_id.template_change_id]
+
+
 }
 
 # API Gateway Deployment updated to depend on the stage
@@ -286,5 +310,6 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
     metrics_enabled       = true               # Enables CloudWatch metrics for this method
     logging_level         = "INFO"             # Set to "ERROR" for error-only logs, "INFO" for detailed logs
     data_trace_enabled    = true               # Enables detailed request/response logging
+    caching_enabled = false
   }
 }
