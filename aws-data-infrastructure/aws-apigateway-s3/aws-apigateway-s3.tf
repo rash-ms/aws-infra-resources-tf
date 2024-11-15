@@ -29,9 +29,6 @@ resource "aws_iam_policy" "spain_sub_api_gateway_s3_iam_policy" {
     Statement = [
       {
         Effect = "Allow",
-        Principal = {
-          "AWS": "arn:aws:iam::022499035568:role/spain_sub_api_gateway_s3_api_role"
-        },
         Action = [
           "s3:GetObject",
           "s3:PutObject",
