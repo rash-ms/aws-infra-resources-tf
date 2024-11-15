@@ -197,7 +197,7 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 #set($datetime = $context.requestTimeEpoch)
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "bronze/$eventType/${eventType}_$datetime.json",
+  "key": "bronze/#eventType/#eventType_#datetime.json",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
