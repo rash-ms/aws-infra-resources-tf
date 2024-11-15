@@ -158,10 +158,10 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
-  request_parameters = {
-    # "integration.request.header.Content-Type" = "'application/json'"
-    "integration.request.path.object" = "method.request.path.object"
-  }
+  # request_parameters = {
+  #   # "integration.request.header.Content-Type" = "'application/json'"
+  #   "integration.request.path.object" = "method.request.path.object"
+  # }
 
   request_templates = {
     "application/json" = <<EOF
