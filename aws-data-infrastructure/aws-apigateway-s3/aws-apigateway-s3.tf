@@ -176,8 +176,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
     "application/json" = <<EOF
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
-#set($pathName = "bronze")
-#set($object_key = "$pathName~$eventType~$eventType_$timestamp.json")
+#set($pathName = "bronze/")
+#set($object_key = "subscription_created.json")
 #set($context.requestOverride.path = $object_key)
 {
   "object_key": "$object_key",
