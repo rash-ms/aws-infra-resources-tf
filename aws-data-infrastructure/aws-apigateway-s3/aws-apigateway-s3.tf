@@ -177,59 +177,61 @@ EOF
   }
 }
 
-# API Gateway Integration with S3 for the POST request
-resource "aws_api_gateway_integration" "spain_sub_post_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-  resource_id             = aws_api_gateway_resource.spain_sub_resource.id
-  http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
-  integration_http_method = "POST"  # S3 requires PUT for object creation
-  type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
-  credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
-  passthrough_behavior    = "WHEN_NO_MATCH"
-
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/json'"
-  }
-
-request_templates = {
-  "application/json" = <<EOF
-#set($datetime = $context.requestTimeEpoch)
-#set($key = "bronze/subscription_created_" + $datetime + ".json")
-{
-  "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "$key",
-  "body": "$util.base64Encode($input.json('$'))"
-}
-EOF
-}
-}
-
+# # API Gateway Integration with S3 for the POST request
 # resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 #   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
 #   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
 #   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
+#   integration_http_method = "PUT"  # S3 requires PUT for object creation
 #   type                    = "AWS"
-#   integration_http_method = "POST"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}/{event_type}/{event_type}_$context.requestTimeEpoch.json"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
 #   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
+#   passthrough_behavior    = "WHEN_NO_MATCH"
 
 #   request_parameters = {
 #     "integration.request.header.Content-Type" = "'application/json'"
 #   }
 
-#   request_templates = {
-#     "application/json" = <<EOF
+# request_templates = {
+#   "application/json" = <<EOF
+# #set($datetime = $context.requestTimeEpoch)
+# #set($key = "bronze/subscription_created_" + $datetime + ".json")
 # {
-#    "bucket": "${var.bucket_name}",
-#    "key": "$util.escapeJavaScript($input.path('$.event_type'))/$util.escapeJavaScript($input.path('$.event_type'))_$context.requestTimeEpoch.json",
-#    "body": $input.body
+#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
+#   "key": "$key",
+#   "body": "$util.base64Encode($input.json('$'))"
 # }
 # EOF
-#   }
-
-#   passthrough_behavior = "WHEN_NO_MATCH"
 # }
+# }
+
+resource "aws_api_gateway_integration" "spain_sub_post_integration" {
+  rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  resource_id             = aws_api_gateway_resource.spain_sub_resource.id
+  http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
+  type                    = "AWS"
+  integration_http_method = "POST"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/${var.bucket_name}"
+  credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
+
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/json'"
+  }
+
+  request_templates = {
+    "application/json" = <<EOF
+#set($datetime = $context.requestTimeEpoch)
+#set($key = $input.path('$.event_type') + "/" + $input.path('$.event_type') + "_" + $datetime + ".json")
+{
+   "bucket": "${var.bucket_name}",
+   "key": "$key",
+   "body": $input.body
+}
+EOF
+  }
+
+  passthrough_behavior = "WHEN_NO_MATCH"
+}
 
 # API Gateway Deployment updated to depend on the stage
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
