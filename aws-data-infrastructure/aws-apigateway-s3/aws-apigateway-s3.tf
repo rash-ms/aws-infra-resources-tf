@@ -177,6 +177,35 @@ EOF
   }
 }
 
+# # API Gateway Integration with S3 for the POST request
+# resource "aws_api_gateway_integration" "spain_sub_post_integration" {
+#   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method             = aws_api_gateway_method.spain_sub_post_method.http_method
+#   integration_http_method = "PUT"  # S3 requires PUT for object creation
+#   type                    = "AWS"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}"
+#   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
+#   passthrough_behavior    = "WHEN_NO_MATCH"
+
+#   request_parameters = {
+#     "integration.request.header.Content-Type" = "'application/json'"
+#   }
+
+# request_templates = {
+#   "application/json" = <<EOF
+# #set($datetime = $context.requestTimeEpoch)
+# #set($key = "bronze/subscription_created_" + $datetime + ".json")
+# {
+#   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
+#   "key": "$key",
+#   "body": "$util.base64Encode($input.json('$'))"
+# }
+# EOF
+# }
+# }
+
+
 locals {
   request_template_content = <<EOF
 #set($datetime = $context.requestTimeEpoch)
@@ -192,8 +221,22 @@ EOF
     "application/json" = local.request_template_content
   }
 
+  # Define request parameters in locals
+  request_parameters = {
+    "integration.request.header.Content-Type" = "'application/json'"
+  }
+
   # Optional: Compute a hash for auto-detection of changes
   request_template_hash = md5(local.request_template_content)
+}
+
+
+# Generate a random ID based on the template content for automatic detection
+resource "random_id" "template_change_id" {
+  keepers = {
+    request_template_hash = local.request_template_hash
+  }
+  byte_length = 8
 }
 
 
@@ -207,11 +250,12 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 
   request_templates = local.request_templates
+  request_parameters = local.request_parameters  # Use the local variable for parameters
 
   passthrough_behavior = "WHEN_NO_MATCH"
-  # lifecycle {
-  #   replace_triggered_by = [local.request_template_hash]  # Trigger replacement based on template hash
-  # }
+
+  # Force recreation when the random_id changes
+  depends_on = [random_id.template_change_id]
 
 
 }
