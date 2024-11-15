@@ -194,15 +194,9 @@ resource "aws_api_gateway_integration" "spain_sub_post_integration" {
 
   request_templates = {
     "application/json" = <<EOF
-#set($eventType = $input.json('$.event_type') ?: "unknown_event")
-#set($datetime = $context.requestTimeEpoch)
-#set($prefix = "/bronze/")
-#set($path = $prefix + $eventType + "/")
-#set($filename = $eventType + "_" + $datetime + ".json")
-#set($key = $path + $filename)
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "$key",
+  "key": "bronze/test_data.json",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
