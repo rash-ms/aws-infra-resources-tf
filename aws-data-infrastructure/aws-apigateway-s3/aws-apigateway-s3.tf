@@ -176,6 +176,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($pathName = "bronze")
 #set($foldername = $pathName + "/" + $eventType)
 #set($filename = $eventType + "_" + $timestamp + ".json")
+#set($context.requestOverride.path.foldername = $foldername)
+#set($context.requestOverride.path.filename = $filename)
 {
   "foldername": "$foldername",
   "filename": "$filename",
