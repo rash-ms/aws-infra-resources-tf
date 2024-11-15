@@ -197,7 +197,7 @@ request_templates = {
 #set($datetime = $context.requestTimeEpoch)
 {
   "bucket": "${data.aws_s3_bucket.spain_sub_event_bucket.bucket}",
-  "key": "test_data_$datetime.json",
+  "key": "subscription_created_$datetime.json",
   "body": "$util.base64Encode($input.json('$'))"
 }
 EOF
