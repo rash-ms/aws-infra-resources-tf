@@ -204,15 +204,15 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
   response_templates = {
     "application/json" = <<EOT
     {
-        "message": "File uploaded successfully",
-        "key": "$context.requestOverride.path.key",
-        "bucket": "$context.requestOverride.path.bucket"
+        "message": "File uploaded successfully"
     }
     EOT
   }
 }
 
-
+        # "key": "$context.requestOverride.path.key",
+        # "bucket": "$context.requestOverride.path.bucket"
+        
 resource "aws_api_gateway_method_response" "spain_method_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id = aws_api_gateway_resource.spain_sub_resource.id
