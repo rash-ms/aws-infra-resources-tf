@@ -169,26 +169,25 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_templates = {
     "application/json" = <<EOT
-
-#set($timestamp = $context.requestTimeEpoch)
-#set($eventType = $input.path('$.event_type'))
-#set($pathName = "bronze")
-#set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
+#set($eventType = $input.json('event_type').replaceAll('"', ''))
+#set($epochString = $context.requestTimeEpoch.toString())
+#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+#set($key = "bronze/" + $pathName)
 #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 #set($context.requestOverride.path.key = $key)
 {
-    "body": $input.body
-    "message": "File uploaded successfully",
+     "body": $input.body
+     "message": "File uploaded successfully",
 }
 EOT
   }
 }
 
 
-#set($eventType = $input.json('event_type').replaceAll('"', ''))
-#set($epochString = $context.requestTimeEpoch.toString())
-#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
-#set($key = "bronze/" + $pathName)
+#set($timestamp = $context.requestTimeEpoch)
+#set($eventType = $input.path('$.event_type'))
+#set($pathName = "bronze")
+#set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
 #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 #set($context.requestOverride.path.key = $key)
 # {
