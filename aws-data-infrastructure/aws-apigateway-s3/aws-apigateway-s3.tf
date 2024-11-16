@@ -162,8 +162,21 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #   }
 # #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 
+
   request_templates = {
     "application/json" = <<EOT
+
+#set($pathName = "$input.json('event_type')_$context.requestTimeEpoch.json")
+#set($key = "bronze/$pathName")
+#set($context.requestOverride.path.bucket = "$input.params('dataSource')")
+#set($context.requestOverride.path.key = "$key")
+{
+    "body": $input.body
+}
+EOT
+  }
+}
+
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
@@ -171,14 +184,14 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 #set($context.requestOverride.path.key = $key)
 
-{
-  "bucket": "${var.bucket_name}",
-  "key": "$key",
-  "body": $input.json('$')
-}
-EOT
-  }
-}
+# {
+#   "bucket": "${var.bucket_name}",
+#   "key": "$key",
+#   "body": $input.json('$')
+# }
+# EOT
+#   }
+# }
 
 
 # API Gateway Deployment updated to depend on the stage
