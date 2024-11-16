@@ -130,7 +130,7 @@ resource "aws_api_gateway_resource" "spain_sub_resource" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
 #   path_part   = "contract"
-  path_part   = var.bucket_name    #"{bucket_name}" # Path parameter for event type
+  path_part   = "{dataSource}" # Path parameter for event type
   depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]
 }
 
@@ -141,9 +141,9 @@ resource "aws_api_gateway_method" "spain_sub_put_method" {
   http_method   = "POST"
   authorization = "NONE"
   
-#   request_parameters = {
-#     "method.request.path.dataSource" = true
-#   }
+  request_parameters = {
+    "method.request.path.dataSource" = true
+  }
 }
 
 
@@ -160,9 +160,9 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
-#   request_parameters = {
-#     "integration.request.path.bucket" = "method.request.path.dataSource"
-#   }
+  request_parameters = {
+    "integration.request.path.bucket" = "method.request.path.dataSource"
+  }
 
   request_templates = {
     "application/json" = <<EOT
@@ -170,8 +170,9 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
 #set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.bucket = "${var.bucket_name}")
+#set($context.requestOverride.path.bucket = $input.params('dataSource'))
 #set($context.requestOverride.path.key = $key)
+
 {
   "bucket": "${var.bucket_name}",
   "key": "$key",
