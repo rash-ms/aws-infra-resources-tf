@@ -175,13 +175,23 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
     "application/json" = <<EOF
 #set($pathName = "bronze")
 #set($object_key = "$pathName/subscription_created.json")
-{
-  "object_key": "$object_key",
-  "body": $input.json('$')
-}
+$input.json('$')
 EOF
   }
 }
+
+
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($pathName = "bronze")
+# #set($object_key = "$pathName/subscription_created.json")
+# {
+#   "object_key": "$object_key",
+#   "body": $input.json('$')
+# }
+# EOF
+#   }
+# }
 
 #   request_templates = {
 #     "application/json" = <<EOF
