@@ -209,6 +209,34 @@ EOT
 # }
 
 
+resource "aws_api_gateway_integration_response" "spain_integration_response" {
+  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  resource_id = aws_api_gateway_resource.spain_sub_resource.id
+  http_method = aws_api_gateway_method.spain_sub_put_method.http_method
+  status_code = "200"
+
+  response_templates = {
+    "application/json" = <<EOT
+    {
+        "message": "File uploaded successfully",
+        "bucket": "$input.params('dataSource')",
+        "key": "$context.requestOverride.path.key"
+    }
+    EOT
+  }
+}
+
+resource "aws_api_gateway_method_response" "spain_method_response" {
+  rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+  resource_id = aws_api_gateway_resource.spain_sub_resource.id
+  http_method = aws_api_gateway_method.spain_sub_put_method.http_method
+  status_code = "200"
+
+  response_models = {
+    "application/json" = "Empty"
+  }
+}
+
 # API Gateway Deployment updated to depend on the stage
 resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
