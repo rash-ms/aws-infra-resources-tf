@@ -207,6 +207,10 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
   http_method = aws_api_gateway_method.spain_sub_put_method.http_method
   status_code = "200"
 
+  depends_on = [
+    aws_api_gateway_integration.spain_sub_put_integration
+  ]
+  
   response_templates = {
     "application/json" = <<EOT
     {
