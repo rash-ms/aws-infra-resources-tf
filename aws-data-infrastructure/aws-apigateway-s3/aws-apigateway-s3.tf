@@ -169,7 +169,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
     # "integration.request.path.foldername" = "method.request.path.foldername",
     # "integration.request.path.filename"   = "method.request.path.filename",
     "integration.request.path.object_key" = "method.request.path.object_key",
-    "integration.request.header.Content-Type" = "'application/json'"
+    # "integration.request.header.Content-Type" = "'application/json'"
   }
 
   request_templates = {
