@@ -175,7 +175,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
     "application/json" = <<EOF
 #set($context.requestOverride.header.Content-Type = "application/json")
 {
-  "key": "$input.params('event_type')/${context.requestTimeEpoch}.json",
+  "key": "$input.params('event_type')/$$context.requestTimeEpoch.json",
   "bucket": "${var.bucket_name}",
   "body": $input.body
 }
