@@ -168,21 +168,30 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
     # "integration.request.path.object" = "method.request.path.object"
     # "integration.request.path.foldername" = "method.request.path.foldername",
     # "integration.request.path.filename"   = "method.request.path.filename",
-    "integration.request.path.key" = "method.request.path.object_key",
-    "integration.request.header.Content-Type" = "'application/json'"
+    "integration.request.path.key" = "method.request.path.object_key"
   }
 
   request_templates = {
     "application/json" = <<EOF
 #set($pathName = "bronze")
 #set($object_key = "$pathName/subscription_created.json")
-{
-  "object_key": "$object_key",
-  "body": $input.json('$')
-}
+$input.json('$')
 EOF
   }
 }
+
+
+#   request_templates = {
+#     "application/json" = <<EOF
+# #set($pathName = "bronze")
+# #set($object_key = "$pathName/subscription_created.json")
+# {
+#   "object_key": "$object_key",
+#   "body": $input.json('$')
+# }
+# EOF
+#   }
+# }
 
 #   request_templates = {
 #     "application/json" = <<EOF
@@ -227,7 +236,6 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
     aws_api_gateway_integration.spain_sub_put_integration
   ]
 }
-
 
 
 # API Gateway Stage with CloudWatch Logging Enabled
