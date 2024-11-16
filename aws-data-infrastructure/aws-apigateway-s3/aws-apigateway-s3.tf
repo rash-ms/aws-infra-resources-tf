@@ -166,7 +166,6 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #   }
 # #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 
-
   request_templates = {
     "application/json" = <<EOT
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
