@@ -123,13 +123,17 @@
 # resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
 #   name        = "spain_sub_shopify_flow_rest_api"
 #   description = "REST API for Shopify Flow integration"
+
+#   endpoint_configuration {
+#     types = ["REGIONAL"]
+#   }
 # }
 
 # # API Gateway Resource Path for '/contract'
 # resource "aws_api_gateway_resource" "spain_sub_resource" {
 #   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
 #   parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
-#   path_part   = "contract"
+#   path_part   = var.bucket_name  #"{dataSource}" #var.bucket_name
 #   depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]
 # }
 
@@ -137,15 +141,12 @@
 # resource "aws_api_gateway_method" "spain_sub_put_method" {
 #   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
 #   resource_id   = aws_api_gateway_resource.spain_sub_resource.id
-#   http_method   = "PUT"
+#   http_method   = "POST"
 #   authorization = "NONE"
   
-#   request_parameters = {
-#     "method.request.querystring.event_type" = true, 
-#     "method.request.path.object_key" = true
-#     # "method.request.path.foldername" = true,
-#     # "method.request.path.filename"   = true
-#   }
+# #   request_parameters = {
+# #     "method.request.path.dataSource" = true
+# #   }
 # }
 
 
@@ -154,71 +155,84 @@
 #   rest_api_id             = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
 #   resource_id             = aws_api_gateway_resource.spain_sub_resource.id
 #   http_method             = aws_api_gateway_method.spain_sub_put_method.http_method
-#   integration_http_method = "PUT"  # S3 requires PUT for object creation
+#   integration_http_method = "PUT"  
 #   type                    = "AWS"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{key}"
-#   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object}"
-#   # uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{foldername}/{filename}"
-# #   uri                     = "arn:aws:apigateway:${var.region}:s3:path/${data.aws_s3_bucket.spain_sub_event_bucket.bucket}/{object_key}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
 #   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
 #   passthrough_behavior    = "WHEN_NO_MATCH"
 
-#   request_parameters = {
-#     # "integration.request.header.Content-Type" = "'application/json'"
-#     # "integration.request.path.object" = "method.request.path.object"
-#     # "integration.request.path.foldername" = "method.request.path.foldername",
-#     # "integration.request.path.filename"   = "method.request.path.filename",
-#     "integration.request.path.key" = "method.request.path.object_key",
-#     # "integration.request.header.Content-Type" = "'application/json'"
-#   }
+# #   request_parameters = {
+# #     "integration.request.path.dataSource" = "method.request.path.dataSource"
+# #   }
+# # #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
+
 
 #   request_templates = {
-#     "application/json" = <<EOF
-# #set($pathName = "bronze")
-# #set($object_key = "$pathName/subscription_created.json")
-# #set($context.requestOverride.path.object_key = $object_key)
+#     "application/json" = <<EOT
+# #set($eventType = $input.json('event_type').replaceAll('"', ''))
+# #set($epochString = $context.requestTimeEpoch.toString())
+# #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+# #set($key = "bronze/" + $pathName)
+# #set($context.requestOverride.path.bucket = "${var.bucket_name}")
+# #set($context.requestOverride.path.key = $key)
 # {
-#   "object_key": "$object_key",
-#   "body": $input.json('$')
+#      "body": $input.body
+#      "message": "File uploaded successfully",
 # }
-# EOF
+# EOT
 #   }
 # }
 
-# #   request_templates = {
-# #     "application/json" = <<EOF
-# # #set($timestamp = $context.requestTimeEpoch)
-# # #set($eventType = $input.path('$.event_type'))
-# # #set($pathName = "bronze")
-# # #set($foldername = $pathName + "/" + $eventType)
-# # #set($filename = $eventType + "_" + $timestamp + ".json")
-# # #set($context.requestOverride.path.foldername = $foldername)
-# # #set($context.requestOverride.path.filename = $filename)
+
+# #set($timestamp = $context.requestTimeEpoch)
+# #set($eventType = $input.path('$.event_type'))
+# #set($pathName = "bronze")
+# #set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
+# #set($context.requestOverride.path.bucket = "${var.bucket_name}")
+# #set($context.requestOverride.path.key = $key)
 # # {
-# #   "foldername": "$foldername",
-# #   "filename": "$filename",
-# #   "body": $input.json('$')
-# # }
-# # EOF
-# #   }
+# #     "body": $input.body
+# #     "message": "File uploaded successfully",
 # # }
 
+# resource "aws_api_gateway_integration_response" "spain_integration_response" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method = aws_api_gateway_method.spain_sub_put_method.http_method
+#   status_code = "200"
 
-# #   request_templates = {
-# #     "application/json" = <<EOF
-# # #set($timestamp = $context.requestTimeEpoch)
-# # #set($eventType = $input.path('$.event_type'))
-# # #set($pathName = "bronze")
-# # #set($object = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-# # {
-# #   "bucket": "${var.bucket_name}",
-# #   "key": "$object",
-# #   "body": $input.json('$')
-# # }
-# # EOF
-# #   }
-# # }
+#   response_templates = {
+#     "application/json" = <<EOT
+#     {
+#         "message": "File uploaded successfully",
+#         "bucket": "$context.requestOverride.path.bucket",
+#         "key": "$context.requestOverride.path.key"
+#     }
+#     EOT
+#   }
 
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id"
+#     "method.response.header.etag"            = "integration.response.header.ETag"
+#   }
+# }
+
+
+# resource "aws_api_gateway_method_response" "spain_method_response" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   resource_id = aws_api_gateway_resource.spain_sub_resource.id
+#   http_method = aws_api_gateway_method.spain_sub_put_method.http_method
+#   status_code = "200"
+
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = false
+#     "method.response.header.etag"            = false
+#   }
+
+#   response_models = {
+#     "application/json" = "Empty"
+#   }
+# }
 
 # # API Gateway Deployment updated to depend on the stage
 # resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
@@ -228,7 +242,6 @@
 #     aws_api_gateway_integration.spain_sub_put_integration
 #   ]
 # }
-
 
 
 # # API Gateway Stage with CloudWatch Logging Enabled
@@ -264,12 +277,12 @@
 # resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
 #   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
 #   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
-#   method_path = "*/*"  # Apply to all methods
+#   method_path = "*/*"  
 
 #   settings {
-#     metrics_enabled       = true               # Enables CloudWatch metrics for this method
-#     logging_level         = "INFO"             # Set to "ERROR" for error-only logs, "INFO" for detailed logs
-#     data_trace_enabled    = true               # Enables detailed request/response logging
+#     metrics_enabled       = true               
+#     logging_level         = "INFO"            
+#     data_trace_enabled    = true              
 #     caching_enabled       = false
 #   }
 # }
