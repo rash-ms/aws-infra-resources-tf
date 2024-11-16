@@ -183,32 +183,6 @@ EOT
   }
 }
 
-#set($pathName = "$input.json('event_type')_$context.requestTimeEpoch.json")
-#set($key = "bronze/$pathName")
-#set($context.requestOverride.path.bucket = "$input.params('dataSource')")
-#set($context.requestOverride.path.key = "$key")
-# {
-#     "body": $input.body
-# }
-
-
-#set($timestamp = $context.requestTimeEpoch)
-#set($eventType = $input.path('$.event_type'))
-#set($pathName = "bronze")
-#set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.bucket = "${var.bucket_name}")
-#set($context.requestOverride.path.key = $key)
-
-# {
-#   "bucket": "${var.bucket_name}",
-#   "key": "$key",
-#   "body": $input.json('$')
-# }
-# EOT
-#   }
-# }
-
-
 resource "aws_api_gateway_integration_response" "spain_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   resource_id = aws_api_gateway_resource.spain_sub_resource.id
@@ -219,12 +193,13 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
     "application/json" = <<EOT
     {
         "message": "File uploaded successfully",
-        "bucket": "$input.params('dataSource')",
-        "key": "$context.requestOverride.path.key"
+        "key": "$context.requestOverride.path.key",
+        "bucket": "$context.requestOverride.path.bucket"
     }
     EOT
   }
 }
+
 
 resource "aws_api_gateway_method_response" "spain_method_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
