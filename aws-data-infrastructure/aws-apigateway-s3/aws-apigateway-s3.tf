@@ -161,7 +161,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
-    "integration.request.path.bucket" = "method.request.path.dataSource"
+    "integration.request.path.dataSource" = "method.request.path.dataSource"
   }
 
   request_templates = {
