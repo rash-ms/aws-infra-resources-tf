@@ -175,14 +175,18 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 #set($context.requestOverride.path.key = $key)
 {
-     "body": $input.body,
-     "message": "File uploaded successfully"
+    "body": $input.json('$'),
+    "message": "File uploaded successfully"
 }
 EOT
   }
 }
 
 
+# {
+#      "body": $input.body,
+#      "message": "File uploaded successfully"
+# }
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
 #set($pathName = "bronze")
