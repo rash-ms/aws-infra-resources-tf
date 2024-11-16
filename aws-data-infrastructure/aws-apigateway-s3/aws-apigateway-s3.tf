@@ -123,6 +123,10 @@ resource "aws_iam_role_policy" "spain_sub_cloudwatch_policy" {
 resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
   name        = "spain_sub_shopify_flow_rest_api"
   description = "REST API for Shopify Flow integration"
+
+  endpoint_configuration {
+    types = ["REGIONAL"]
+  }
 }
 
 # API Gateway Resource Path for '/contract'
