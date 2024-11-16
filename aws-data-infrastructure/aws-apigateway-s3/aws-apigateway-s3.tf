@@ -169,17 +169,28 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_templates = {
     "application/json" = <<EOT
+#set($eventType = $input.json('event_type').replaceAll('"', ''))
+#set($epochString = $context.requestTimeEpoch.toString())
+#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+#set($key = "bronze/" + $pathName)
+#set($context.requestOverride.path.bucket = $input.params('dataSource')) 
+#set($context.requestOverride.path.key = $key)
+{
+    "body": $input.body
+    "message": "File uploaded successfully",
+}
+EOT
+  }
+}
 
 #set($pathName = "$input.json('event_type')_$context.requestTimeEpoch.json")
 #set($key = "bronze/$pathName")
 #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 #set($context.requestOverride.path.key = "$key")
-{
-    "body": $input.body
-}
-EOT
-  }
-}
+# {
+#     "body": $input.body
+# }
+
 
 #set($timestamp = $context.requestTimeEpoch)
 #set($eventType = $input.path('$.event_type'))
