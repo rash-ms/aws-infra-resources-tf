@@ -170,6 +170,21 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_templates = {
     "application/json" = <<EOT
+
+#set($eventType = $input.json('event_type').replaceAll('"', ''))
+#set($epochString = $context.requestTimeEpoch.toString())
+#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+#set($key = "bronze/" + $pathName)
+#set($context.requestOverride.path.bucket = "$input.params('dataSource')")
+#set($context.requestOverride.path.key = $key)
+{
+    "body": $input.body,
+    "message": "File uploaded successfully"
+}
+EOT
+  }
+}
+
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
@@ -177,13 +192,11 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($inputBody = $input.json('$') ?: "{}")
 #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 #set($context.requestOverride.path.key = $key)
-{
-    "body": $inputBody,
-    "message": "File uploaded successfully"
-}
-EOT
-  }
-}
+# {
+#     "body": $inputBody,
+#     "message": "File uploaded successfully"
+# }
+
 
 # {
 #      "body": $input.json('$'),
@@ -210,7 +223,7 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
   depends_on = [
     aws_api_gateway_integration.spain_sub_put_integration
   ]
-  
+
   response_templates = {
     "application/json" = <<EOT
     {
