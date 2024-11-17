@@ -237,8 +237,8 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   depends_on  = [
     aws_api_gateway_method.spain_sub_put_method,
     aws_api_gateway_integration.spain_sub_put_integration,
-    # aws_api_gateway_integration_response.spain_integration_response,
-    # aws_api_gateway_method_response.spain_method_response
+    aws_api_gateway_integration_response.spain_integration_response,
+    aws_api_gateway_method_response.spain_method_response
   ]
 }
 
