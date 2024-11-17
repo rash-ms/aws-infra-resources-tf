@@ -205,10 +205,10 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
     EOT
   }
 
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
-    "method.response.header.etag"            = "integration.response.header.ETag"
-  }
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
+#     "method.response.header.etag"            = "integration.response.header.ETag"
+#   }
 }
 
 
@@ -218,10 +218,10 @@ resource "aws_api_gateway_method_response" "spain_method_response" {
   http_method = aws_api_gateway_method.spain_sub_put_method.http_method
   status_code = "200"
 
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = false
-    "method.response.header.etag"            = false
-  }
+#   response_parameters = {
+#     "method.response.header.x-amz-request-id" = false
+#     "method.response.header.etag"            = false
+#   }
 
   response_models = {
     "application/json" = "Empty"
