@@ -159,7 +159,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   http_method             = aws_api_gateway_method.spain_sub_put_method.http_method
   integration_http_method = "PUT"  
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
@@ -286,4 +287,53 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
     data_trace_enabled    = true              
     caching_enabled       = false
   }
+}
+
+
+resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
+  name = "spain_v2_api_gateway_failure_alerts"
+}
+
+resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
+  for_each  = toset(var.notification_emails)
+  topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
+  protocol  = "email"
+  endpoint  = each.value
+}
+
+resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_4xx_alarm" {
+  alarm_name          = "spain_v2_api_gateway_4XX_Error"
+  alarm_description   = "Triggered when API Gateway returns 4XX errors."
+  metric_name         = "4XXError"
+  namespace           = "AWS/ApiGateway"
+  statistic           = "Sum"
+  period              = 300                          # 5-minute evaluation period
+  evaluation_periods  = 1                            # Trigger after 1 evaluation period
+  threshold           = 1                            # Trigger if 4XXError count >= 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+
+  dimensions = {
+    ApiName = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.name
+  }
+
+  alarm_actions = [aws_sns_topic.spain_v2_failure_alert_topic.arn]
+}
+
+
+resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_5xx_alarm" {
+  alarm_name          = "spain_v2_api_gateway_5XX_Error"
+  alarm_description   = "Triggered when API Gateway returns 5XX errors."
+  metric_name         = "5XXError"
+  namespace           = "AWS/ApiGateway"
+  statistic           = "Sum"
+  period              = 300                          # 5-minute evaluation period
+  evaluation_periods  = 1                            # Trigger after 1 evaluation period
+  threshold           = 1                            # Trigger if 5XXError count >= 1
+  comparison_operator = "GreaterThanOrEqualToThreshold"
+
+  dimensions = {
+    ApiName = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.name
+  }
+
+  alarm_actions = [aws_sns_topic.spain_v2_failure_alert_topic.arn]
 }
