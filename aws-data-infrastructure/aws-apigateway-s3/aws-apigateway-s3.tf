@@ -212,6 +212,9 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   stage_name    = "subscriptions"
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
+
+  cache_cluster_enabled = false
+
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
     format          = jsonencode({
@@ -232,6 +235,7 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   }
   depends_on = [aws_api_gateway_account.api_gateway_account_settings]
 }
+
 # Configure Method Settings for Detailed Logging
 resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
