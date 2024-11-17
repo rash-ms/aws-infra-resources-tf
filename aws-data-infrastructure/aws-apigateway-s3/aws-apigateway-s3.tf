@@ -132,8 +132,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   http_method             = aws_api_gateway_method.spain_sub_put_method.http_method
   integration_http_method = "PUT"  
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
   request_parameters = {
@@ -235,20 +235,54 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
     "Name" = "spain_sub_shopify_flow_log"
   }
   depends_on = [aws_api_gateway_account.api_gateway_account_settings]
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
-# Configure Method Settings for Detailed Logging
+
+# Configure Method Settings for Detailed Logging and Caching
 resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
-  method_path = "*/*"  
+  method_path = "*/*" # Apply to all methods and resources
+
   settings {
-    metrics_enabled       = true               
-    logging_level         = "INFO"            
-    data_trace_enabled    = true              
-    caching_enabled       = false
+    metrics_enabled       = true               # Enable CloudWatch metrics
+    logging_level         = "INFO"            # Set logging level to INFO
+    data_trace_enabled    = true              # Enable data trace logging
+    caching_enabled       = true              # Enable caching
+    cache_ttl_in_seconds  = 300               # Set TTL for cache (5 minutes)
   }
 }
+
+
+# # Configure Method Settings for Detailed Logging
+# resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
+#   method_path = "*/*"  
+#   settings {
+#     metrics_enabled       = true               
+#     logging_level         = "INFO"            
+#     data_trace_enabled    = true              
+#     caching_enabled       = false
+#   }
+# }
+
+# # Add method settings using this resource
+# resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
+#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
+#   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
+#   method_path = "*/*" # Apply to all methods and resources
+
+#   settings {
+#     caching_enabled      = true
+#     cache_ttl_in_seconds = 300 # TTL of 300 seconds (5 minutes)
+#   }
+# }
+
 
 resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
   name = "spain_v2_api_gateway_failure_alerts"
