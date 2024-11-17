@@ -146,6 +146,7 @@ resource "aws_api_gateway_method" "spain_sub_put_method" {
   authorization = "NONE"
   
   request_parameters = {
+    "method.request.querystring.event_type" = true,
     "method.request.path.dataSource" = true
   }
 }
@@ -163,6 +164,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   passthrough_behavior    = "WHEN_NO_MATCH"
 
   request_parameters = {
+    "integration.request.header.Content-Type" = "'application/json'",
     "integration.request.path.dataSource" = "method.request.path.dataSource"
   }
 
