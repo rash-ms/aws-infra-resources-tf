@@ -214,6 +214,7 @@ resource "aws_api_gateway_stage" "spain_sub_api_gateway_stage_log" {
   deployment_id = aws_api_gateway_deployment.spain_sub_api_gateway_deployment.id
 
   cache_cluster_enabled = true
+  cache_cluster_size    = "0.5"
 
   access_log_settings {
     destination_arn = aws_cloudwatch_log_group.spain_sub_api_gateway_log_group.arn
