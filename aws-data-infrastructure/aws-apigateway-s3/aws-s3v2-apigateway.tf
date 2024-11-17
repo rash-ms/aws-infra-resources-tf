@@ -1,123 +1,6 @@
-# Reference an existing S3 bucket
-data "aws_s3_bucket" "spain_v2_event_bucket" {
-  bucket = var.bucket_name
+data "aws_iam_role" "existing_api_gateway_s3_role" {
+  name = "spain_sub_api_gateway_s3_api_role" # Existing role name
 }
-
-
-# IAM Role for API Gateway to access S3
-resource "aws_iam_role" "spain_v2_api_gateway_s3_api_role" {
-  name = "spain_v2_api_gateway_s3_api_role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "apigateway.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-# IAM Policy for S3 access and CloudWatch logging
-resource "aws_iam_policy" "spain_v2_api_gateway_s3_iam_policy" {
-  name = "spain_v2_api_gateway_s3_iam_policy"
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListBucket"
-        ],
-        Resource = [
-          "arn:aws:s3:::byt-test-prod",
-          "arn:aws:s3:::byt-test-prod/*",
-          "arn:aws:s3:::byt-test-prod/bronze/*",
-          "arn:aws:s3:::${data.aws_s3_bucket.spain_v2_event_bucket.bucket}/*"
-        ]
-      },
-      {
-        Effect = "Allow",
-        Action = [
-          "logs:CreateLogGroup",
-          "logs:CreateLogStream",
-          "logs:PutLogEvents"
-        ],
-        Resource = "arn:aws:logs:*:*:*"
-      }
-    ]
-  })
-}
-
-# Attach the IAM Policy to the Role
-resource "aws_iam_role_policy_attachment" "spain_v2_api_gateway_role_policy_attachment" {
-  role       = aws_iam_role.spain_v2_api_gateway_s3_api_role.name
-  policy_arn = aws_iam_policy.spain_v2_api_gateway_s3_iam_policy.arn
-}
-
-
-# CloudWatch Log Group for API Gateway Logs
-resource "aws_cloudwatch_log_group" "spain_v2_api_gateway_log_group" {
-  name              = "/aws/apigateway/spain_v2_shopify_flow_s3_log"
-  retention_in_days = 7
-}
-
-
-data "aws_iam_policy_document" "spain_v2_cloudwatch_assume_role" {
-  statement {
-    effect = "Allow"
-
-    principals {
-      type        = "Service"
-      identifiers = ["apigateway.amazonaws.com"]
-    }
-
-    actions = ["sts:AssumeRole"]
-  }
-}
-
-
-data "aws_iam_policy_document" "spain_v2_get_cloudwatch_policy" {
-  statement {
-    effect = "Allow"
-
-    actions = [
-      "logs:CreateLogGroup",
-      "logs:CreateLogStream",
-      "logs:DescribeLogGroups",
-      "logs:DescribeLogStreams",
-      "logs:PutLogEvents",
-      "logs:GetLogEvents",
-      "logs:FilterLogEvents",
-    ]
-
-    resources = ["*"]
-  }
-}
-
-resource "aws_iam_role" "spain_v2_api_gateway_cloudwatch_global" {
-  name               = "spain_v2_api_gateway_cloudwatch_global"
-  assume_role_policy = data.aws_iam_policy_document.spain_v2_cloudwatch_assume_role.json
-}
-
-
-resource "aws_api_gateway_account" "spain_v2_api_gateway_account_settings" {
-  cloudwatch_role_arn = aws_iam_role.spain_v2_api_gateway_cloudwatch_global.arn
-}
-
-
-resource "aws_iam_role_policy" "spain_v2_cloudwatch_policy" {
-  name   = "spain_v2_cloudwatch_policy"
-  role   = aws_iam_role.spain_v2_api_gateway_cloudwatch_global.id
-  policy = data.aws_iam_policy_document.spain_v2_get_cloudwatch_policy.json
-}
-
 
 
 # API Gateway REST API
@@ -151,31 +34,18 @@ resource "aws_api_gateway_method" "spain_v2_put_method" {
   }
 }
 
-
-# # API Gateway Integration with S3 for the PUT request
 resource "aws_api_gateway_integration" "spain_v2_put_integration" {
   rest_api_id             = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
   resource_id             = aws_api_gateway_resource.spain_v2_resource.id
   http_method             = aws_api_gateway_method.spain_v2_put_method.http_method
-  integration_http_method = "PUT"  
+  integration_http_method = "PUT"
   type                    = "AWS"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}"
-  credentials             = aws_iam_role.spain_v2_api_gateway_s3_api_role.arn
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+  credentials             = data.aws_iam_role.existing_api_gateway_s3_role.arn # Use existing role
   passthrough_behavior    = "WHEN_NO_MATCH"
-
-  request_parameters = {
-    "integration.request.header.Content-Type" = "'application/json'",
-    # "integration.request.path.bucket" = "method.request.path.bucket"
-    # "integration.request.path.bucket" = "method.request.path.bucket"
-  }
-
-# #set($context.requestOverride.path.bucket = "$input.params('bucket')")
-# #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 
   request_templates = {
     "application/json" = <<EOT
-
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
@@ -189,71 +59,29 @@ EOT
   }
 }
 
-
-resource "aws_api_gateway_integration_response" "spain_v2_integration_response" {
-  rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
-  resource_id = aws_api_gateway_resource.spain_v2_resource.id
-  http_method = aws_api_gateway_method.spain_v2_put_method.http_method
-  status_code = "200"
-
-  depends_on = [
-    aws_api_gateway_integration.spain_v2_put_integration
-  ]
-
-  response_templates = {
-    "application/json" = <<EOT
-    {
-        "message": "File uploaded successfully",
-        "bucket": "$context.requestOverride.path.bucket",
-        "key": "$context.requestOverride.path.key"
-    }
-    EOT
-  }
-
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
-    "method.response.header.etag"            = "integration.response.header.ETag"
-  }
+data "aws_iam_policy" "existing_api_gateway_s3_policy" {
+  name = "spain_sub_api_gateway_s3_iam_policy" # Existing policy name
 }
 
-
-resource "aws_api_gateway_method_response" "spain_v2_method_response" {
-  rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
-  resource_id = aws_api_gateway_resource.spain_v2_resource.id
-  http_method = aws_api_gateway_method.spain_v2_put_method.http_method
-  status_code = "200"
-
-  response_parameters = {
-    "method.response.header.x-amz-request-id" = true,
-    "method.response.header.etag"            = true
-  }
-
-  response_models = {
-    "application/json" = "Empty"
-  }
+data "aws_iam_role" "existing_cloudwatch_role" {
+  name = "spain_sub_api_gateway_cloudwatch_global" # Existing CloudWatch role name
 }
 
-
-# API Gateway Deployment updated to depend on the stage
-resource "aws_api_gateway_deployment" "spain_v2_api_gateway_deployment" {
-  rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
-  depends_on  = [
-    aws_api_gateway_method.spain_v2_put_method,
-    aws_api_gateway_integration.spain_v2_put_integration,
-    aws_api_gateway_integration_response.spain_v2_integration_response,
-    aws_api_gateway_method_response.spain_v2_method_response
-  ]
+resource "aws_api_gateway_account" "spain_v2_api_gateway_account_settings" {
+  cloudwatch_role_arn = data.aws_iam_role.existing_cloudwatch_role.arn # Use existing role
 }
 
+data "aws_cloudwatch_log_group" "existing_log_group" {
+  name = "/aws/apigateway/spain_sub_shopify_flow_s3_log" # Existing log group name
+}
 
-# API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_v2_api_gateway_stage_log" {
   stage_name    = "subscriptions"
   rest_api_id   = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_v2_api_gateway_deployment.id
 
   access_log_settings {
-    destination_arn = aws_cloudwatch_log_group.spain_v2_api_gateway_log_group.arn
+    destination_arn = data.aws_cloudwatch_log_group.existing_log_group.arn # Use existing log group
     format          = jsonencode({
       "requestId"      = "$context.requestId",
       "ip"             = "$context.identity.sourceIp",
@@ -268,25 +96,6 @@ resource "aws_api_gateway_stage" "spain_v2_api_gateway_stage_log" {
   }
 
   xray_tracing_enabled = true
-  tags = {
-    "Name" = "spain_v2_shopify_flow_log"
-  }
-
-  depends_on = [aws_api_gateway_account.spain_v2_api_gateway_account_settings]
-}
-
-# Configure Method Settings for Detailed Logging
-resource "aws_api_gateway_method_settings" "spain_v2_api_gateway_method_settings" {
-  rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
-  stage_name  = aws_api_gateway_stage.spain_v2_api_gateway_stage_log.stage_name
-  method_path = "*/*"  
-
-  settings {
-    metrics_enabled       = true               
-    logging_level         = "INFO"            
-    data_trace_enabled    = true              
-    caching_enabled       = false
-  }
 }
 
 
