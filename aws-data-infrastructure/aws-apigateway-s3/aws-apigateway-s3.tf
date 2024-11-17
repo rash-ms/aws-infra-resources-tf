@@ -165,7 +165,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'",
-    "integration.request.path.dataSource" = "method.request.path.dataSource"
+    "integration.request.path.bucket" = "method.request.path.dataSource"
+    # "integration.request.path.dataSource" = "method.request.path.dataSource"
   }
 
 # #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
