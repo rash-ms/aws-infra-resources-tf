@@ -178,41 +178,12 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 #set($context.requestOverride.path.key = $key)
 {
-    "body": $input.json('$'),
+    "body": $input.body,
     "message": "File uploaded successfully"
 }
 EOT
   }
 }
-
-#set($eventType = $input.json('event_type').replaceAll('"', ''))
-#set($epochString = $context.requestTimeEpoch.toString())
-#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
-#set($key = "bronze/" + $pathName)
-#set($inputBody = $input.json('$') ?: "{}")
-#set($context.requestOverride.path.bucket = "$input.params('dataSource')")
-#set($context.requestOverride.path.key = $key)
-# {
-#     "body": $inputBody,
-#     "message": "File uploaded successfully"
-# }
-
-
-# {
-#      "body": $input.json('$'),
-#      "body": $input.body,
-#      "message": "File uploaded successfully"
-# }
-#set($timestamp = $context.requestTimeEpoch)
-#set($eventType = $input.path('$.event_type'))
-#set($pathName = "bronze")
-#set($key = $pathName + "/" + $eventType + "/" + $eventType + "_" + $timestamp + ".json")
-#set($context.requestOverride.path.bucket = "${var.bucket_name}")
-#set($context.requestOverride.path.key = $key)
-# {
-#     "body": $input.body
-#     "message": "File uploaded successfully",
-# }
 
 resource "aws_api_gateway_integration_response" "spain_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
@@ -235,7 +206,7 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
   }
 
   response_parameters = {
-    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id"
+    "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
     "method.response.header.etag"            = "integration.response.header.ETag"
   }
 }
@@ -262,7 +233,9 @@ resource "aws_api_gateway_deployment" "spain_sub_api_gateway_deployment" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   depends_on  = [
     aws_api_gateway_method.spain_sub_put_method,
-    aws_api_gateway_integration.spain_sub_put_integration
+    aws_api_gateway_integration.spain_sub_put_integration,
+    aws_api_gateway_integration_response.spain_integration_response,
+    aws_api_gateway_method_response.spain_method_response
   ]
 }
 
