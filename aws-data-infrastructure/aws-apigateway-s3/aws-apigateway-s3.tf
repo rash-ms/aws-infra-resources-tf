@@ -313,7 +313,7 @@ resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_4xx_alarm" {
   comparison_operator = "GreaterThanOrEqualToThreshold"
 
   dimensions = {
-    ApiName = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.name
+    ApiName = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.name
   }
 
   alarm_actions = [aws_sns_topic.spain_v2_failure_alert_topic.arn]
@@ -332,7 +332,7 @@ resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_5xx_alarm" {
   comparison_operator = "GreaterThanOrEqualToThreshold"
 
   dimensions = {
-    ApiName = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.name
+    ApiName = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.name
   }
 
   alarm_actions = [aws_sns_topic.spain_v2_failure_alert_topic.arn]
