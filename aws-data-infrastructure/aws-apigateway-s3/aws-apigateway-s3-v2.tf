@@ -69,7 +69,7 @@ resource "aws_cloudwatch_log_group" "spain_v2_api_gateway_log_group" {
 }
 
 
-data "aws_iam_policy_document" "cloudwatch_assume_role" {
+data "aws_iam_policy_document" "spain_v2_cloudwatch_assume_role" {
   statement {
     effect = "Allow"
 
@@ -101,20 +101,20 @@ data "aws_iam_policy_document" "spain_v2_get_cloudwatch_policy" {
   }
 }
 
-resource "aws_iam_role" "api_gateway_cloudwatch_global" {
-  name               = "api_gateway_cloudwatch_global"
-  assume_role_policy = data.aws_iam_policy_document.cloudwatch_assume_role.json
+resource "aws_iam_role" "spain_v2_api_gateway_cloudwatch_global" {
+  name               = "spain_v2_api_gateway_cloudwatch_global"
+  assume_role_policy = data.aws_iam_policy_document.spain_v2_cloudwatch_assume_role.json
 }
 
 
-resource "aws_api_gateway_account" "api_gateway_account_settings" {
-  cloudwatch_role_arn = aws_iam_role.api_gateway_cloudwatch_global.arn
+resource "aws_api_gateway_account" "spain_v2_api_gateway_account_settings" {
+  cloudwatch_role_arn = aws_iam_role.spain_v2_api_gateway_cloudwatch_global.arn
 }
 
 
 resource "aws_iam_role_policy" "spain_v2_cloudwatch_policy" {
   name   = "spain_v2_cloudwatch_policy"
-  role   = aws_iam_role.api_gateway_cloudwatch_global.id
+  role   = aws_iam_role.spain_v2_api_gateway_cloudwatch_global.id
   policy = data.aws_iam_policy_document.spain_v2_get_cloudwatch_policy.json
 }
 
@@ -190,7 +190,7 @@ EOT
 }
 
 
-resource "aws_api_gateway_integration_response" "spain_integration_response" {
+resource "aws_api_gateway_integration_response" "spain_v2_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
   resource_id = aws_api_gateway_resource.spain_v2_resource.id
   http_method = aws_api_gateway_method.spain_v2_put_method.http_method
@@ -217,7 +217,7 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
 }
 
 
-resource "aws_api_gateway_method_response" "spain_method_response" {
+resource "aws_api_gateway_method_response" "spain_v2_method_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_v2_shopify_flow_rest_api.id
   resource_id = aws_api_gateway_resource.spain_v2_resource.id
   http_method = aws_api_gateway_method.spain_v2_put_method.http_method
@@ -240,8 +240,8 @@ resource "aws_api_gateway_deployment" "spain_v2_api_gateway_deployment" {
   depends_on  = [
     aws_api_gateway_method.spain_v2_put_method,
     aws_api_gateway_integration.spain_v2_put_integration,
-    aws_api_gateway_integration_response.spain_integration_response,
-    aws_api_gateway_method_response.spain_method_response
+    aws_api_gateway_integration_response.spain_v2_integration_response,
+    aws_api_gateway_method_response.spain_v2_method_response
   ]
 }
 
@@ -272,7 +272,7 @@ resource "aws_api_gateway_stage" "spain_v2_api_gateway_stage_log" {
     "Name" = "spain_v2_shopify_flow_log"
   }
 
-  depends_on = [aws_api_gateway_account.api_gateway_account_settings]
+  depends_on = [aws_api_gateway_account.spain_v2_api_gateway_account_settings]
 }
 
 # Configure Method Settings for Detailed Logging
