@@ -6,6 +6,11 @@ variable "bucket_name" {
   default = "byt-test-prod"  # Name of the existing S3 bucket
 }
 
+variable "notification_emails" {
+  description = "List of email addresses to receive alerts"
+  type        = list(string)
+  default     = ["mujeeb.adeniji@condenast.com", "email2@example.com"]
+}
 
 # variable "region" {
 #   type = string
