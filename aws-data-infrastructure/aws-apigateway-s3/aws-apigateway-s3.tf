@@ -134,7 +134,7 @@ resource "aws_api_gateway_rest_api" "spain_sub_shopify_flow_rest_api" {
 resource "aws_api_gateway_resource" "spain_sub_resource" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.root_resource_id
-  path_part   = "{dataSource}" #var.bucket_name
+  path_part   = "{bucket}" #var.bucket_name
   depends_on  = [aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api]
 }
 
@@ -147,7 +147,7 @@ resource "aws_api_gateway_method" "spain_sub_put_method" {
   
   request_parameters = {
     "method.request.querystring.event_type" = true,
-    "method.request.path.dataSource" = true
+    "method.request.path.bucket" = true
   }
 }
 
@@ -165,11 +165,11 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'",
-    "integration.request.path.bucket" = "method.request.path.dataSource"
-    # "integration.request.path.dataSource" = "method.request.path.dataSource"
+    "integration.request.path.bucket" = "method.request.path.bucket"
+    # "integration.request.path.bucket" = "method.request.path.bucket"
   }
 
-# #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
+# #set($context.requestOverride.path.bucket = "$input.params('bucket')")
 # #set($context.requestOverride.path.bucket = "${var.bucket_name}")
 
   request_templates = {
@@ -179,7 +179,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
 #set($key = "bronze/" + $pathName)
-#set($context.requestOverride.path.bucket = "$input.params('dataSource')")
+#set($context.requestOverride.path.bucket = "$input.params('bucket')")
 #set($context.requestOverride.path.key = $key)
 {
     "body": $input.body
@@ -198,15 +198,15 @@ resource "aws_api_gateway_integration_response" "spain_integration_response" {
     aws_api_gateway_integration.spain_sub_put_integration
   ]
 
-  response_templates = {
-    "application/json" = <<EOT
-    {
-        "message": "File uploaded successfully",
-        "bucket": "$context.requestOverride.path.bucket",
-        "key": "$context.requestOverride.path.key"
-    }
-    EOT
-  }
+#   response_templates = {
+#     "application/json" = <<EOT
+#     {
+#         "message": "File uploaded successfully",
+#         "bucket": "$context.requestOverride.path.bucket",
+#         "key": "$context.requestOverride.path.key"
+#     }
+#     EOT
+#   }
 
   response_parameters = {
     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
