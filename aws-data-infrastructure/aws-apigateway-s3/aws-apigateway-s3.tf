@@ -178,7 +178,7 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
 #set($context.requestOverride.path.bucket = "$input.params('dataSource')")
 #set($context.requestOverride.path.key = $key)
 {
-    "body": $input.body,
+    "body": $input.json('$'),
     "message": "File uploaded successfully"
 }
 EOT
