@@ -222,8 +222,8 @@ resource "aws_api_gateway_method_response" "spain_method_response" {
   status_code = "200"
 
   response_parameters = {
-    "method.response.header.x-amz-request-id" = false,
-    "method.response.header.etag"            = false
+    "method.response.header.x-amz-request-id" = true,
+    "method.response.header.etag"            = true
   }
 
   response_models = {
