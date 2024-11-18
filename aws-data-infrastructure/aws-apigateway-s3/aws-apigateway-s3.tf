@@ -263,38 +263,46 @@ resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
 }
 
 
-resource "aws_chatbot_slack_channel_configuration" "slack_channel" {
-  slack_channel_id   = "C07SSBH5A3A"        
-  slack_team_id      = "T03VAJN2485"        
-  configuration_name = "spain_sub_api-gateway-alerts" 
-  iam_role_arn       = aws_iam_role.spain_sub_chatbot_role.arn 
-  sns_topic_arns     = [aws_sns_topic.spain_v2_failure_alert_topic.arn] 
-}
+# resource "aws_chatbot_slack_channel_configuration" "slack_channel" {
+#   slack_channel_id   = "C07SSBH5A3A"        
+#   slack_team_id      = "T03VAJN2485"        
+#   configuration_name = "spain_sub_api-gateway-alerts" 
+#   iam_role_arn       = aws_iam_role.spain_sub_chatbot_role.arn 
+#   sns_topic_arns     = [aws_sns_topic.spain_v2_failure_alert_topic.arn] 
+# }
 
 # Define the IAM role required for Chatbot
-resource "aws_iam_role" "spain_sub_chatbot_role" {
-  name = "Spain_sub_AWSChatbotRole"
+# resource "aws_iam_role" "spain_sub_chatbot_role" {
+#   name = "Spain_sub_AWSChatbotRole"
 
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          Service = "chatbot.amazonaws.com"
-        },
-        Action = "sts:AssumeRole"
-      }
-    ]
-  })
-}
-
-# resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
-#   for_each  = toset(var.notification_emails)
-#   topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
-#   protocol  = "email"
-#   endpoint  = each.value
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Principal = {
+#           Service = "chatbot.amazonaws.com"
+#         },
+#         Action = "sts:AssumeRole"
+#       }
+#     ]
+#   })
 # }
+
+
+# resource "aws_sns_topic_subscription" "spain_sub_slack_webhook" {
+#   topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
+#   protocol  = "https"
+#   endpoint  = "https://hooks.slack.com/services/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" # Webhook URL
+# }
+
+
+resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
+  for_each  = toset(var.notification_emails)
+  topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
+  protocol  = "email"
+  endpoint  = each.value
+}
 
 resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_4xx_alarm" {
   alarm_name          = "spain_v2_api_gateway_4XX_Error"
