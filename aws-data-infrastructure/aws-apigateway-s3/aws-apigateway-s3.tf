@@ -257,6 +257,11 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
   }
 }
 
+
+resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
+  name = "spain_v2_api_gateway_failure_alerts"
+}
+
 resource "aws_chatbot_slack_channel_configuration" "slack_channel" {
   slack_channel_id   = "C07SSBH5A3A"        
   slack_team_id      = "U03V6VD8JHL"        
@@ -281,12 +286,6 @@ resource "aws_iam_role" "spain_sub_chatbot_role" {
       }
     ]
   })
-}
-
-
-
-resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
-  name = "spain_v2_api_gateway_failure_alerts"
 }
 
 # resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
