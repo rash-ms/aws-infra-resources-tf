@@ -214,7 +214,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
 }
 
 # API Gateway Stage with CloudWatch Logging Enabled
-resource "aws_api_gateway_stage" "spain_sub_apigateway_stage_log" {
+resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
   stage_name    = "subscriptions"
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
@@ -250,7 +250,7 @@ resource "aws_api_gateway_stage" "spain_sub_apigateway_stage_log" {
 # Configure Method Settings for Detailed Logging and Caching
 resource "aws_api_gateway_method_settings" "spain_sub_apigateway_method_settings" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
-  stage_name  = aws_api_gateway_stage.spain_sub_apigateway_stage_log.stage_name
+  stage_name  = aws_api_gateway_stage.spain_sub_apigateway_stage.stage_name
   method_path = "*/*" # Apply to all methods and resources
 
   settings {

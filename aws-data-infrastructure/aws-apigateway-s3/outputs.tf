@@ -7,5 +7,5 @@ output "role_apigateway_s3_policy_arn" {
 }
 
 output "invoke_url" {
-  value = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.invoke_url}/${aws_api_gateway_stage.spain_sub_apigateway_s3_stage.stage_name}"
+  value = aws_api_gateway_stage.spain_sub_apigateway_stage.invoke_url
 }
