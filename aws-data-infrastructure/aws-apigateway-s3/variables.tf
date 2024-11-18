@@ -2,7 +2,7 @@ variable "region" {
   default = "us-east-1"  # Set your AWS region
 }
 
-variable "bucket_name" {
+variable "fivetran_s3_bucket" {
   default = "byt-test-prod"  # Name of the existing S3 bucket
 }
 
