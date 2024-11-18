@@ -132,8 +132,8 @@ resource "aws_api_gateway_integration" "spain_sub_put_integration" {
   http_method             = aws_api_gateway_method.spain_sub_put_method.http_method
   integration_http_method = "PUT"  
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
-#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
   request_parameters = {
@@ -257,43 +257,44 @@ resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_setting
   }
 }
 
+resource "aws_chatbot_slack_channel_configuration" "slack_channel" {
+  slack_channel_id   = "C07SSBH5A3A"        
+  slack_team_id      = "U03V6VD8JHL"        
+  configuration_name = "spain_sub_api-gateway-alerts" 
+  iam_role_arn       = aws_iam_role.spain_sub_chatbot_role.arn 
+  sns_topic_arns     = [aws_sns_topic.slack_notifications.arn] 
+}
 
-# # Configure Method Settings for Detailed Logging
-# resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
-#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-#   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
-#   method_path = "*/*"  
-#   settings {
-#     metrics_enabled       = true               
-#     logging_level         = "INFO"            
-#     data_trace_enabled    = true              
-#     caching_enabled       = false
-#   }
-# }
+# Define the IAM role required for Chatbot
+resource "aws_iam_role" "spain_sub_chatbot_role" {
+  name = "Spain_sub_AWSChatbotRole"
 
-# # Add method settings using this resource
-# resource "aws_api_gateway_method_settings" "spain_sub_api_gateway_method_settings" {
-#   rest_api_id = aws_api_gateway_rest_api.spain_sub_shopify_flow_rest_api.id
-#   stage_name  = aws_api_gateway_stage.spain_sub_api_gateway_stage_log.stage_name
-#   method_path = "*/*" # Apply to all methods and resources
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          Service = "chatbot.amazonaws.com"
+        },
+        Action = "sts:AssumeRole"
+      }
+    ]
+  })
+}
 
-#   settings {
-#     caching_enabled      = true
-#     cache_ttl_in_seconds = 300 # TTL of 300 seconds (5 minutes)
-#   }
-# }
 
 
 resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
   name = "spain_v2_api_gateway_failure_alerts"
 }
 
-resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
-  for_each  = toset(var.notification_emails)
-  topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
-  protocol  = "email"
-  endpoint  = each.value
-}
+# resource "aws_sns_topic_subscription" "spain_v2_email_subscriptions" {
+#   for_each  = toset(var.notification_emails)
+#   topic_arn = aws_sns_topic.spain_v2_failure_alert_topic.arn
+#   protocol  = "email"
+#   endpoint  = each.value
+# }
 
 resource "aws_cloudwatch_metric_alarm" "spain_v2_apigateway_4xx_alarm" {
   alarm_name          = "spain_v2_api_gateway_4XX_Error"
