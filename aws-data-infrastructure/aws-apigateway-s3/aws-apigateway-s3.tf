@@ -4,8 +4,8 @@
 # }
 
 # # IAM Role for API Gateway to access S3
-# resource "aws_iam_role" "spain_sub_api_gateway_s3_api_role" {
-#   name                 = "spain_sub_api_gateway_s3_api_role"
+# resource "aws_iam_role" "spain_sub_apigateway_s3_api_role" {
+#   name                 = "spain_sub_apigateway_s3_api_role"
 
 #   assume_role_policy = jsonencode({
 #     Version = "2012-10-17",
@@ -22,8 +22,8 @@
 # }
 
 # # IAM Policy for S3 access and CloudWatch logging
-# resource "aws_iam_policy" "spain_sub_api_gateway_s3_iam_policy" {
-#   name = "spain_sub_api_gateway_s3_iam_policy"
+# resource "aws_iam_policy" "spain_sub_apigateway_s3_iam_policy" {
+#   name = "spain_sub_apigateway_s3_iam_policy"
 #   policy = jsonencode({
 #     Version = "2012-10-17",
 #     Statement = [
@@ -53,14 +53,14 @@
 # }
 
 # # Attach the IAM Policy to the Role
-# resource "aws_iam_role_policy_attachment" "spain_sub_api_gateway_role_policy_attachment" {
-#   role       = aws_iam_role.spain_sub_api_gateway_s3_api_role.name
-#   policy_arn = aws_iam_policy.spain_sub_api_gateway_s3_iam_policy.arn
+# resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_attachment" {
+#   role       = aws_iam_role.spain_sub_apigateway_s3_api_role.name
+#   policy_arn = aws_iam_policy.spain_sub_apigateway_s3_iam_policy.arn
 # }
 
 # # CloudWatch Log Group for API Gateway Logs
 # resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
-#   name              = "/aws/apigateway/spain_sub_api_gateway_s3_shopify_flow_log"
+#   name              = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_log"
 #   retention_in_days = 7
 # }
 
@@ -144,7 +144,7 @@
 #   type                    = "AWS"
 # #   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
 #   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
-#   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
+#   credentials             = aws_iam_role.spain_sub_apigateway_s3_api_role.arn
 #   passthrough_behavior    = "WHEN_NO_MATCH"
 
 #   request_parameters = {
@@ -264,7 +264,7 @@
 # }
 
 # resource "aws_sns_topic" "spain_sub_apigateway_failure_alert_topic" {
-#   name = "spain_v2_api_gateway_failure_alerts"
+#   name = "spain_sub_apigateway_failure_alerts"
 # }
 
 # resource "aws_sns_topic_subscription" "spain_sub_apigateway_email_alert_notification" {
@@ -275,7 +275,7 @@
 # }
 
 # resource "aws_cloudwatch_metric_alarm" "spain_sub_apigateway_4xx_alarm" {
-#   alarm_name          = "spain_sub_api_gateway_4XX_Error"
+#   alarm_name          = "spain_sub_apigateway_4XX_Error"
 #   alarm_description   = "Triggered when API Gateway returns 4XX errors."
 #   metric_name         = "4XXError"
 #   namespace           = "AWS/ApiGateway"
@@ -293,7 +293,7 @@
 # }
 
 # resource "aws_cloudwatch_metric_alarm" "spain_sub_apigateway_5xx_alarm" {
-#   alarm_name          = "spain_sub_api_gateway_5XX_Error"
+#   alarm_name          = "spain_sub_apigateway_5XX_Error"
 #   alarm_description   = "Triggered when API Gateway returns 5XX errors."
 #   metric_name         = "5XXError"
 #   namespace           = "AWS/ApiGateway"
