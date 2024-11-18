@@ -262,12 +262,13 @@ resource "aws_sns_topic" "spain_v2_failure_alert_topic" {
   name = "spain_v2_api_gateway_failure_alerts"
 }
 
+
 resource "aws_chatbot_slack_channel_configuration" "slack_channel" {
   slack_channel_id   = "C07SSBH5A3A"        
   slack_team_id      = "U03V6VD8JHL"        
   configuration_name = "spain_sub_api-gateway-alerts" 
   iam_role_arn       = aws_iam_role.spain_sub_chatbot_role.arn 
-  sns_topic_arns     = [aws_sns_topic.slack_notifications.arn] 
+  sns_topic_arns     = [aws_sns_topic.spain_v2_failure_alert_topic.arn] 
 }
 
 # Define the IAM role required for Chatbot
