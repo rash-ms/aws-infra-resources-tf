@@ -142,7 +142,8 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   http_method             = aws_api_gateway_method.spain_sub_apigateway_create_method.http_method
   integration_http_method = "PUT"
   type                    = "AWS"
-  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+#   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
+  uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
   credentials             = aws_iam_role.spain_sub_api_gateway_s3_api_role.arn
   passthrough_behavior    = "WHEN_NO_MATCH"
 
