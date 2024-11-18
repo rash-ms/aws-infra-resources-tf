@@ -242,9 +242,9 @@ resource "aws_api_gateway_stage" "spain_sub_apigateway_stage_log" {
   }
   depends_on = [aws_api_gateway_account.spain_sub_apigateway_account_settings]
 
-  lifecycle {
-    create_before_destroy = true
-  }
+#   lifecycle {
+#     create_before_destroy = true
+#   }
 }
 
 # Configure Method Settings for Detailed Logging and Caching
