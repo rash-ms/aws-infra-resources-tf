@@ -156,7 +156,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
 #set($formattedTime = $util.formatDate($context.requestTimeEpoch, "yyyyMMddHHmmss", "GMT"))
 #set($pathName =  $eventType + "/" + $eventType + "_" + $formattedTime + ".json")
-#set($key = "bronze/" + $pathName)
+#set($key = "raw/" + $pathName)
 #set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
 #set($context.requestOverride.path.key = $key)
 {
