@@ -154,8 +154,8 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   request_templates = {
     "application/json" = <<EOT
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
-#set($epochString = $context.requestTimeEpoch.toString())
-#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+#set($formattedTime = $util.formatDate($context.requestTimeEpoch, "yyyyMMddHHmmss", "GMT"))
+#set($pathName =  $eventType + "/" + $eventType + "_" + $formattedTime + ".json")
 #set($key = "bronze/" + $pathName)
 #set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
 #set($context.requestOverride.path.key = $key)
@@ -165,6 +165,17 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 EOT
   }
 }
+
+
+#set($eventType = $input.json('event_type').replaceAll('"', ''))
+#set($epochString = $context.requestTimeEpoch.toString())
+#set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
+#set($key = "bronze/" + $pathName)
+#set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
+#set($context.requestOverride.path.key = $key)
+# {
+#     "body": $input.body
+# }
 
 resource "aws_api_gateway_integration_response" "spain_sub_apigateway_s3_integration_response" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
