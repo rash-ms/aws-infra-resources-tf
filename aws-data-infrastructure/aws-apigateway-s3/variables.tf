@@ -3,7 +3,7 @@ variable "region" {
 }
 
 variable "fivetran_s3_bucket" {
-  default = "byt-test-prod"  # Name of the existing S3 bucket
+  default = "byt-tes-flow-app" #"byt-test-prod"  # Name of the existing S3 bucket
 }
 
 variable "notification_emails" {
