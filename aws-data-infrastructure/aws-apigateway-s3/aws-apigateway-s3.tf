@@ -200,7 +200,7 @@ resource "aws_api_gateway_integration_response" "spain_sub_apigateway_s3_integra
   #   }
   #   EOT
   # }
-  
+
   response_parameters = {
     "method.response.header.x-amz-request-id" = "integration.response.header.x-amz-request-id",
     "method.response.header.etag"             = "integration.response.header.ETag"
@@ -235,7 +235,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
 
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
-  stage_name    = "subscriptions-v1"
+  stage_name    = "subscription"
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
 
