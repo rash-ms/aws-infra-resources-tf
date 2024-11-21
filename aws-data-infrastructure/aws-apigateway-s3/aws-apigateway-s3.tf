@@ -272,8 +272,12 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
   depends_on = [
     aws_api_gateway_method.spain_sub_apigateway_create_method,
     aws_api_gateway_integration.spain_sub_apigateway_s3_integration_request,
-    aws_api_gateway_integration_response.spain_sub_apigateway_s3_integration_response,
-    aws_api_gateway_method_response.spain_sub_apigateway_s3_method_response
+    # aws_api_gateway_integration_response.spain_sub_apigateway_s3_integration_response,
+    # aws_api_gateway_method_response.spain_sub_apigateway_s3_method_response
+    aws_api_gateway_integration_response.success_response,
+    aws_api_gateway_integration_response.client_error_response,
+    aws_api_gateway_integration_response.server_error_response
+
   ]
 }
 
