@@ -47,6 +47,16 @@ resource "aws_iam_policy" "spain_sub_apigateway_s3_iam_policy" {
           "logs:PutLogEvents"
         ],
         Resource = "arn:aws:logs:*:*:*"
+      },
+      {
+        "Effect": "Allow",
+        "Action": [
+          "apigateway:POST",                // Deploy API
+          "apigateway:PATCH",               // Modify stages
+          "apigateway:FlushStageCache",     // Clear cache
+          "apigateway:GET"                  // View API details
+        ],
+        "Resource": "arn:aws:apigateway:*::/restapis/*" // All APIs in all regions
       }
     ]
   })
@@ -145,7 +155,8 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
 #   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}}"
   credentials             = aws_iam_role.spain_sub_apigateway_s3_api_role.arn
-  passthrough_behavior    = "WHEN_NO_MATCH"
+  # passthrough_behavior    = "WHEN_NO_MATCH"
+  passthrough_behavior    = "WHEN_NO_TEMPLATES"  # Dynamically propagate errors from S3
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'"
