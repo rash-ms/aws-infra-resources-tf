@@ -197,6 +197,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($encodedBody = $util.base64Encode($input.body))
 {
     "bucket": "${var.fivetran_s3_bucket}",
+    "key": "raw/$context.requestId.json",
     "metadata": {
       "encoding": "base64"
     },
