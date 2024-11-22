@@ -184,10 +184,8 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 # "status": "$util.escapeJavaScript($input.json('$.status'))",
 # "event_type": "$util.escapeJavaScript($input.json('$.event_type'))"
 
-
 #  "body": $input.body
-#  "body": "$util.base64Encode($input.json('$'))"
-
+# #set($escapedBody = $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"))
   request_templates = {
     "application/json" = <<EOT
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
@@ -196,11 +194,10 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($key = "raw/" + $pathName)
 #set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 #set($context.requestOverride.path.key = $key)
-#set($escapedBody = $inputBody.replaceAll('"', '\\"'))
+#set($escapedBody = $util.escapeJavaScript($input.json('$')).replaceAll('\\"', '"'))
 {
     "bucket": "${var.fivetran_s3_bucket}",
-    "body": "$escapedBody"
-   
+    "body": $escapedBody
 }
 EOT
   }
