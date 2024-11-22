@@ -182,7 +182,6 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
  {
 
       "bucket": "${var.fivetran_s3_bucket}",
-      "key": "$util.escapeJavaScript($key)",
       "body": $util.toJson($input.json('$'))
 }
 EOT
