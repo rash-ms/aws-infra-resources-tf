@@ -172,6 +172,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   # "body": $input.body
   # "body": "$util.escapeJavaScript($input.body)"
   #  "body": $input.json('$')
+  #  "body": $util.toJson($input.json('$'))
 
   request_templates = {
     "application/json" = <<EOT
@@ -184,7 +185,12 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
  {
 
       "bucket": "${var.fivetran_s3_bucket}",
-      "body": $util.toJson($input.json('$'))
+      "body": {
+          "subscription_id": "$input.json('$.subscription_id')",
+          "customer_id": "$input.json('$.customer_id')",
+          "status": "$input.json('$.status')",
+          "event_type": "$input.json('$.event_type')"
+      }
 }
 EOT
   }
