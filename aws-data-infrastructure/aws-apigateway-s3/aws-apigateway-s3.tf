@@ -170,6 +170,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   
   #set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
   # "body": $input.body
+  # "body": "$util.escapeJavaScript($input.body)"
 
   request_templates = {
     "application/json" = <<EOT
@@ -179,10 +180,12 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($key = "raw/" + $pathName)
 #set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 #set($context.requestOverride.path.key = $key)
+#set($inputBody = $input.json('$'))
+#set($escapedBody = $util.escapeJavaScript($inputBody))
  {
 
       "bucket": "${var.fivetran_s3_bucket}",
-      "body": "$util.escapeJavaScript($input.body)"
+      "body": $escapedBody
 }
 EOT
   }
