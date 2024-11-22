@@ -193,35 +193,9 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($key = "raw/" + $pathName)
 #set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 #set($context.requestOverride.path.key = $key)
- {
-
-      "bucket": "${var.fivetran_s3_bucket}",
-      "body": {
-          "subscription_id": "$input.json('$.subscription_id')",
-          "customer_id": "$input.json('$.customer_id')",
-          "order_id": "$input.json('$.order_id')",
-          "app_id": "$input.json('$.app_id')",
-          "customer_email": "$input.json('$.customer_email')",
-          "status": "$input.json('$.status')",
-          "last_payment_status": "$input.json('$.last_payment_status')",
-          "next_billing_date": "$input.json('$.next_billing_date')",
-          "delivery_price_amount": "$input.json('$.delivery_price_amount')",
-          "currency_code": "$input.json('$.currency_code')",
-          "note": "$input.json('$.note')",
-          "customer_amount_spent": "$input.json('$.customer_amount_spent')",
-          "order_name": "$input.json('$.order_name')",
-          "cancelled_at": "$input.json('$.cancelled_at')",
-          "cancel_reason": "$input.json('$.cancel_reason')",
-          "customer_payment_id": "$input.json('$.customer_payment_id')",
-          "revoked_reason": "$input.json('$.revoked_reason')",
-          "discounts": $input.json('$.discounts'),
-          "lines": $input.json('$.lines'),
-          "created_at": "$input.json('$.created_at')",
-          "update_at": "$input.json('$.update_at')",
-          "event_type": "$input.json('$.event_type')",
-          "event_source": "$input.json('$.event_source')",
-          "market": "$input.json('$.market')"
-      }
+{
+    "bucket": "${var.fivetran_s3_bucket}",
+    "body": $input.body
 }
 EOT
   }
