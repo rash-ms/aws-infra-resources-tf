@@ -53,10 +53,10 @@ resource "aws_iam_policy" "spain_sub_apigateway_s3_iam_policy" {
         "Action": [
           "apigateway:POST",
           "apigateway:PUT",
-          "apigateway:DELETE",                // Deploy API
-          "apigateway:PATCH",                // Modify stages
-          "apigateway:GET",                 // View API details
-          "apigateway:FlushStageCache"     // Clear cache
+          "apigateway:DELETE",               
+          "apigateway:PATCH",               
+          "apigateway:GET",                
+          "apigateway:FlushStageCache"
           
         ],
         "Resource": "arn:aws:apigateway:*::/restapis/*" // All APIs in all regions
