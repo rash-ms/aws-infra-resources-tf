@@ -174,6 +174,12 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   #  "body": $input.json('$')
   #  "body": $util.toJson($input.json('$'))
 
+            
+  # "subscription_id": "$input.json('$.subscription_id')",
+  # "customer_id": "$input.json('$.customer_id')",
+  # "status": "$input.json('$.status')",
+  # "event_type": "$input.json('$.event_type')"
+
   request_templates = {
     "application/json" = <<EOT
 #set($eventType = $input.json('event_type').replaceAll('"', ''))
@@ -186,10 +192,10 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 
       "bucket": "${var.fivetran_s3_bucket}",
       "body": {
-          "subscription_id": "$input.json('$.subscription_id')",
-          "customer_id": "$input.json('$.customer_id')",
-          "status": "$input.json('$.status')",
-          "event_type": "$input.json('$.event_type')"
+          "subscription_id": "$util.escapeJavaScript($input.json('$.subscription_id'))",
+          "customer_id": "$util.escapeJavaScript($input.json('$.customer_id'))",
+          "status": "$util.escapeJavaScript($input.json('$.status'))",
+          "event_type": "$util.escapeJavaScript($input.json('$.event_type'))"
       }
 }
 EOT
