@@ -75,15 +75,20 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionv09"
+  stage_name     = "subscriptionv10"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
 # CloudWatch Log Group for API Gateway Logs
-resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
+#resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
   
   # name              = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_log"
-  name              = local.log_group_name
+  #name              = local.log_group_name
+  #retention_in_days = 7
+#}
+
+resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}/${local.stage_name}"
   retention_in_days = 7
 }
 
