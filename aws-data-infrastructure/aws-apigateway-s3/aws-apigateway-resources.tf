@@ -71,10 +71,17 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
   policy_arn = aws_iam_policy.spain_sub_apigateway_s3_iam_policy.arn
 }
 
+
+locals {
+  stage_name     = "subscriptionv12"
+  log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
+}
+
 # CloudWatch Log Group for API Gateway Logs
 resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
+  
   # name              = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_log"
-  name              = "/aws/apigateway/${aws_api_gateway_stage.spain_sub_apigateway_stage.stage_name}"
+  name              = local.log_group_name
   retention_in_days = 7
 }
 
@@ -248,7 +255,8 @@ resource "aws_api_gateway_method_response" "spain_sub_apigateway_s3_method_respo
 
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
-  stage_name    = "subscriptionv12"
+# stage_name    = "subscriptionv12"
+  stage_name    = local.stage_name
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   # deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
   deployment_id = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id}"
