@@ -75,7 +75,7 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionv06"
+  stage_name     = "subscriptionv07"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
