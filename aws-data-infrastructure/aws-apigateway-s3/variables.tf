@@ -4,7 +4,7 @@ variable "region" {
 
 variable "fivetran_s3_bucket" {
   # default = "byt-test-flow-api"
-  default = "byt-test-flow-app" 
+  default = "byt-test-flow-ap" 
 }
 
 variable "notification_emails" {
