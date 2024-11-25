@@ -27,8 +27,9 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
 # Pass the dynamically generated prefix to the script
 resource "null_resource" "delete_old_logs" {
   provisioner "local-exec" {
+    command = "chmod +x ${path.module}/delete_old_logs.sh && ${path.module}/delete_old_logs.sh ${local.stage_name} $(terraform output -raw log_group_prefix)"
     #command = "${path.module}/delete_old_logs.sh ${local.stage_name} $(terraform output -raw log_group_prefix)"
-    command = "bash ${path.module}/delete_old_logs.sh ${local.stage_name} $(terraform output -raw log_group_prefix)"
+    #command = "bash ${path.module}/delete_old_logs.sh ${local.stage_name} $(terraform output -raw log_group_prefix)"
 
   }
 
