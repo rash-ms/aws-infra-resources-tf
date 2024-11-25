@@ -1,8 +1,3 @@
-# Reference an existing S3 bucket
-# data "aws_s3_bucket" "spain_sub_event_bucket" {
-#   bucket = var.fivetran_s3_bucket
-# }
-
 # IAM Role for API Gateway to access S3
 resource "aws_iam_role" "spain_sub_apigateway_s3_api_role" {
   name                 = "spain_sub_apigateway_s3_api_role"
@@ -75,7 +70,7 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionsv0"
+  stage_name     = "subscriptionsv01"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
@@ -182,7 +177,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
     # "integration.request.path.bucket_name" = "method.request.path.bucket_name"
   }
   
-#set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
+#set($context.requestOverride.path.bucket_name = "${var.fivetran_s3_bucket}")
 #set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 
   request_templates = {
@@ -191,7 +186,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
 #set($key = "raw/" + $pathName)
-#set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
+#set($context.requestOverride.path.bucket_name = "${var.fivetran_s3_bucket}")
 #set($context.requestOverride.path.key = $key)
 {
     "bucket_name": "${var.fivetran_s3_bucket}",
@@ -242,22 +237,22 @@ resource "aws_api_gateway_method_response" "spain_sub_apigateway_s3_method_respo
 }
 
 # API Gateway Deployment updated to depend on the stage
-# resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
-#   # rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
+resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
+  # rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
 
-#   rest_api_id = "${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}"
+  rest_api_id = "${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}"
 
-#   depends_on = [
-#     aws_api_gateway_method.spain_sub_apigateway_create_method,
-#     aws_api_gateway_integration.spain_sub_apigateway_s3_integration_request,
-#     aws_api_gateway_integration_response.spain_sub_apigateway_s3_integration_response,
-#     aws_api_gateway_method_response.spain_sub_apigateway_s3_method_response
-#   ]
+  depends_on = [
+    aws_api_gateway_method.spain_sub_apigateway_create_method,
+    aws_api_gateway_integration.spain_sub_apigateway_s3_integration_request,
+    aws_api_gateway_integration_response.spain_sub_apigateway_s3_integration_response,
+    aws_api_gateway_method_response.spain_sub_apigateway_s3_method_response
+  ]
 
-#   stage_description = "${timestamp()}" // forces to 'create' a new deployment each run
-#   description = "Deployed at ${timestamp()}" // just some comment field which can be seen in deployment history
+  stage_description = "${timestamp()}" // forces to 'create' a new deployment each run
+  description = "Deployed at ${timestamp()}" // just some comment field which can be seen in deployment history
 
-# }
+}
 
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
