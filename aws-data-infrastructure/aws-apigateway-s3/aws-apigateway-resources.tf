@@ -228,7 +228,7 @@ resource "aws_api_gateway_method_response" "spain_sub_apigateway_s3_method_respo
 }
 
 # API Gateway Deployment updated to depend on the stage
-resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
+# resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
 #   # rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
 
 #   rest_api_id = "${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}"
