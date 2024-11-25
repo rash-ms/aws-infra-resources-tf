@@ -75,7 +75,7 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionv10"
+  stage_name     = "subscriptionsv0"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
@@ -265,6 +265,7 @@ resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
   stage_name    = local.stage_name
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
+
   # deployment_id = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id}"
 
   cache_cluster_enabled = true
