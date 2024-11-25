@@ -44,7 +44,9 @@ resource "aws_iam_policy" "spain_sub_apigateway_s3_iam_policy" {
         Action = [
           "logs:CreateLogGroup",
           "logs:CreateLogStream",
-          "logs:PutLogEvents"
+          "logs:PutLogEvents",
+          "logs:DescribeLogGroups",
+          "logs:DeleteLogGroup"
         ],
         Resource = "arn:aws:logs:*:*:*"
       },
@@ -73,7 +75,7 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionv02"
+  stage_name     = "subscriptionv03"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
