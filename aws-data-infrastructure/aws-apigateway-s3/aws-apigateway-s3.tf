@@ -132,8 +132,8 @@ resource "aws_api_gateway_rest_api" "spain_sub_apigateway_shopify_flow_rest_api"
 resource "aws_api_gateway_resource" "spain_sub_apigateway_create_resource" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.root_resource_id
-  # path_part   = var.fivetran_s3_bucket
-  path_part   = "{bucket_name}" 
+  path_part   = var.fivetran_s3_bucket
+  #path_part   = "{bucket_name}" 
   depends_on  = [aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api]
 }
 
@@ -146,7 +146,7 @@ resource "aws_api_gateway_method" "spain_sub_apigateway_create_method" {
 
   request_parameters = {
     "method.request.querystring.event_type" = true,
-    "method.request.path.bucket_name" = true
+    #"method.request.path.bucket_name" = true
   }
 }
 
@@ -165,34 +165,11 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'",
-    "integration.request.path.bucket_name" = "method.request.path.bucket_name"
+    #"integration.request.path.bucket_name" = "method.request.path.bucket_name"
   }
   
 #set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
-# "body": $input.body
-# "body": "$util.escapeJavaScript($input.body)"
-#  "body": $input.json('$')
-#  "body": $util.toJson($input.json('$'))
-
-# "subscription_id": "$input.json('$.subscription_id')",
-# "customer_id": "$input.json('$.customer_id')",
-# "status": "$input.json('$.status')",
-# "event_type": "$input.json('$.event_type')"
-
-# "subscription_id": "$util.escapeJavaScript($input.json('$.subscription_id'))",
-# "customer_id": "$util.escapeJavaScript($input.json('$.customer_id'))",
-# "status": "$util.escapeJavaScript($input.json('$.status'))",
-# "event_type": "$util.escapeJavaScript($input.json('$.event_type'))"
-
-#  "body": $input.body
-# #set($escapedBody = $util.escapeJavaScript($input.json('$')).replaceAll("\\'", "'"))
-
-#set($encodedBody = $util.base64Encode($input.body))
-# "key": "raw/$context.requestId.json",
-# "metadata": {
-#   "encoding": "base64"
-# },
-# "body": "$encodedBody"
+#set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 
   request_templates = {
     "application/json" = <<EOT
@@ -200,10 +177,10 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
 #set($key = "raw/" + $pathName)
-#set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
+#set($context.requestOverride.path.bucket_name = "${var.fivetran_s3_bucket}")
 #set($context.requestOverride.path.key = $key)
 {
-    "bucket": "${var.fivetran_s3_bucket}",
+    "bucket_name": "${var.fivetran_s3_bucket}",
     "body": $input.body
 }
 EOT
