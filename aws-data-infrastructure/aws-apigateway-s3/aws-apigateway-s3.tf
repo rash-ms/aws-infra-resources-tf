@@ -1,7 +1,7 @@
 resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
 
   # stage_description = "${md5(file("aws-apigateway-resources.tf"))}"
-  stage_description = md5(file("${path.module}/api_gateway.tf"))
+  stage_description = md5(file("${path.module}/aws-apigateway-resources.tf"))
 
   # rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   rest_api_id = "${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}"
