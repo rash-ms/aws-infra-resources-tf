@@ -21,5 +21,14 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
     aws_api_gateway_integration_response.spain_sub_apigateway_s3_integration_response,
     aws_api_gateway_method_response.spain_sub_apigateway_s3_method_response
   ]
+}
 
+
+# Pass the dynamically generated prefix to the script
+resource "null_resource" "delete_old_logs" {
+  provisioner "local-exec" {
+    command = "./delete_old_logs.sh ${local.stage_name} $(terraform output -raw log_group_prefix)"
+  }
+
+  depends_on = [aws_api_gateway_stage.spain_sub_apigateway_stage]
 }
