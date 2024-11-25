@@ -1,3 +1,8 @@
+locals {
+  stage_name     = "subscriptionsv04"
+  log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
+}
+
 # IAM Role for API Gateway to access S3
 resource "aws_iam_role" "spain_sub_apigateway_s3_api_role" {
   name                 = "spain_sub_apigateway_s3_api_role"
@@ -66,18 +71,6 @@ resource "aws_iam_policy" "spain_sub_apigateway_s3_iam_policy" {
 resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_attachment" {
   role       = aws_iam_role.spain_sub_apigateway_s3_api_role.name
   policy_arn = aws_iam_policy.spain_sub_apigateway_s3_iam_policy.arn
-}
-
-
-locals {
-  stage_name     = "subscriptionsv03"
-  log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
-}
-
-# CloudWatch Log Group for API Gateway Logs
-resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
-  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}/${local.stage_name}"
-  retention_in_days = 7
 }
 
 data "aws_iam_policy_document" "spain_sub_apigateway_s3_cloudwatch_assume_role" {
@@ -228,11 +221,18 @@ resource "aws_api_gateway_method_response" "spain_sub_apigateway_s3_method_respo
   }
 }
 
+# CloudWatch Log Group for API Gateway Logs
+resource "aws_cloudwatch_log_group" "spain_sub_apigateway_log_group" {
+  name              = "API-Gateway-Execution-Logs_${aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id}/${local.stage_name}"
+  retention_in_days = 7
+}
+
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
   stage_name    = local.stage_name
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
-  deployment_id = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id}"
+  deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
+  # deployment_id = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id}"
 
   cache_cluster_enabled = true
   cache_cluster_size    = "0.5"
