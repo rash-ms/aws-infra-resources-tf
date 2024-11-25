@@ -247,7 +247,7 @@ resource "aws_api_gateway_method_response" "spain_sub_apigateway_s3_method_respo
 
 # API Gateway Stage with CloudWatch Logging Enabled
 resource "aws_api_gateway_stage" "spain_sub_apigateway_stage" {
-  stage_name    = "subscriptionv1"
+  stage_name    = "subscriptionv11"
   rest_api_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   # deployment_id = aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id
   deployment_id = "${aws_api_gateway_deployment.spain_sub_apigateway_s3_deployment.id}"
