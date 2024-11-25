@@ -73,7 +73,7 @@ resource "aws_iam_role_policy_attachment" "spain_sub_apigateway_role_policy_atta
 
 
 locals {
-  stage_name     = "subscriptionv12"
+  stage_name     = "subscriptionv13"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
@@ -140,8 +140,8 @@ resource "aws_api_gateway_rest_api" "spain_sub_apigateway_shopify_flow_rest_api"
 resource "aws_api_gateway_resource" "spain_sub_apigateway_create_resource" {
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   parent_id   = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.root_resource_id
-  path_part   = var.fivetran_s3_bucket
-  #path_part   = "{bucket_name}" 
+  #path_part   = var.fivetran_s3_bucket
+  path_part   = "{bucket_name}" 
   depends_on  = [aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api]
 }
 
@@ -154,7 +154,7 @@ resource "aws_api_gateway_method" "spain_sub_apigateway_create_method" {
 
   request_parameters = {
     "method.request.querystring.event_type" = true,
-    #"method.request.path.bucket_name" = true
+    "method.request.path.bucket_name" = true
   }
 }
 
@@ -165,7 +165,6 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
   http_method             = aws_api_gateway_method.spain_sub_apigateway_create_method.http_method
   integration_http_method = "PUT"
   type                    = "AWS"
-  # uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket}/{key}"
   uri                     = "arn:aws:apigateway:${var.region}:s3:path/{bucket_name}/{key}"
   credentials             = aws_iam_role.spain_sub_apigateway_s3_api_role.arn
   # passthrough_behavior    = "WHEN_NO_MATCH"
@@ -173,7 +172,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 
   request_parameters = {
     "integration.request.header.Content-Type" = "'application/json'",
-    #"integration.request.path.bucket_name" = "method.request.path.bucket_name"
+    "integration.request.path.bucket_name" = "method.request.path.bucket_name"
   }
   
 #set($context.requestOverride.path.bucket = "${var.fivetran_s3_bucket}")
@@ -185,7 +184,7 @@ resource "aws_api_gateway_integration" "spain_sub_apigateway_s3_integration_requ
 #set($epochString = $context.requestTimeEpoch.toString())
 #set($pathName =  $eventType + "/" + $eventType + "_" + $epochString + ".json") 
 #set($key = "raw/" + $pathName)
-#set($context.requestOverride.path.bucket_name = "${var.fivetran_s3_bucket}")
+#set($context.requestOverride.path.bucket_name = "$input.params('bucket_name')")
 #set($context.requestOverride.path.key = $key)
 {
     "bucket_name": "${var.fivetran_s3_bucket}",
