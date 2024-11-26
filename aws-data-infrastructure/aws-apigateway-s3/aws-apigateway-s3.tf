@@ -1,6 +1,6 @@
 locals {
   stage_name     = "subscriptionsv02"
-  deployed_at = timestamp()
+  # deployed_at    = timestamp()
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 }
 
@@ -230,7 +230,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
   # Use triggers to force deployment
   triggers = {
     # stage_description = md5(file("${path.module}/api-resources-resources.tf"))
-      stage_description = local.deployed_at
+      stage_description = local.stage_name
       }
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
   
