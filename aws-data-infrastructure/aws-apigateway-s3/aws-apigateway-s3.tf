@@ -18,7 +18,7 @@
 
 
 locals {
-  stage_name     = "subscriptionsv05"
+  stage_name     = "subscriptionsv001"
   log_group_name = "/aws/apigateway/spain_sub_apigateway_s3_shopify_flow_${local.stage_name}"
 
   # Generate a hash of the stage_name to detect changes
