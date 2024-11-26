@@ -25,7 +25,7 @@ locals {
   stage_name_hash = md5(local.stage_name)
 
   # Use stage_name_hash to determine if the deployment timestamp should change
-  deploy_at = "${local.stage_name_hash}-${timestamp()}"
+  # deploy_at = local.stage_name_hash
 }
 
 # locals {
@@ -265,7 +265,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
   # Triggers for forced deployment/redeployment
   triggers = {
     stage_name_hash = local.stage_name_hash
-    deploy_at       = local.deploy_at
+    # deploy_at       = local.deploy_at
   }
 
   rest_api_id = aws_api_gateway_rest_api.spain_sub_apigateway_shopify_flow_rest_api.id
