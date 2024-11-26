@@ -3,4 +3,3 @@ test:
   project-environment: ["dev", "prod"]
   project-team-names:
     - 'data-eng-us'
-
