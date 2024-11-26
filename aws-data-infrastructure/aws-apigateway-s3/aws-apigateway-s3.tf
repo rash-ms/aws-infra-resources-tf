@@ -16,6 +16,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
   ]
 }
 
+
 # locals {
 #   stage_name     = "subscriptionsv02"
 #   # deployed_at    = timestamp()
