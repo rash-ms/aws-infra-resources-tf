@@ -4,7 +4,7 @@ resource "aws_api_gateway_deployment" "spain_sub_apigateway_s3_deployment" {
   # Use triggers to force deployment
   triggers = {
     # stage_description = md5(file("${path.module}/api-resources-resources.tf"))
-    stage_description = "${md5(file("api-resources-resources.tf"))}"
+    stage_description = "${md5(file("api-resources-setup.tf"))}"
   }
 
   # stage_description = "API deployment for stage dev - ${timestamp()}" 
