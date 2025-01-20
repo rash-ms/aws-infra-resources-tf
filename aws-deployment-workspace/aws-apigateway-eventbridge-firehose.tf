@@ -1,3 +1,3 @@
-module "aws-apigateway-s3" {
+module "aws-apigateway-eventbridge-firehose" {
   source = "../aws-data-infrastructure/aws-apigateway-eventbridge-firehose/"
 }
