@@ -1,13 +1,53 @@
+# # ==============================
+# # API Gateway Configuration
+# # ==============================
+
 # resource "aws_apigatewayv2_api" "chargebee_retention_http_api_poc" {
 #   name          = "chargebee_retention-http-api_poc"
 #   protocol_type = "HTTP"
 # }
 
+# # Log group for API Gateway
 # resource "aws_cloudwatch_log_group" "chargebee_retention_api_gateway_logs_poc" {
-#   name              = "/aws/apigateway/chargebee_retention-http-api_poc"
+#   name              = "/aws/apigateway/chargebee_retention_http_api_poc"
 #   retention_in_days = 7
 # }
 
+# # IAM role for API Gateway to log to CloudWatch
+# resource "aws_iam_role" "chargebee_retention_api_gateway_logs_role_poc" {
+#   name = "chargebee_retention_api_gateway_logs_role_poc"
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = "sts:AssumeRole",
+#       Effect = "Allow",
+#       Principal = {
+#         Service = "apigateway.amazonaws.com"
+#       }
+#     }]
+#   })
+# }
+
+# resource "aws_iam_role_policy" "apigateway_cloudwatch_logs_policy" {
+#   name = "chargebee_retention_apigateway_logs_policy"
+#   role = aws_iam_role.chargebee_retention_api_gateway_logs_role_poc.id
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = [
+#         "logs:CreateLogGroup",
+#         "logs:CreateLogStream",
+#         "logs:PutLogEvents"
+#       ],
+#       Effect   = "Allow",
+#       Resource = "arn:aws:logs:*:*:log-group:/aws/apigateway/*"
+#     }]
+#   })
+# }
+
+# # API Gateway stage configuration with logging
 # resource "aws_apigatewayv2_stage" "chargebee_retention_stage_poc" {
 #   api_id      = aws_apigatewayv2_api.chargebee_retention_http_api_poc.id
 #   name        = "$default"
@@ -29,21 +69,23 @@
 #   }
 # }
 
-# # Create EventBridge
+# # ==============================
+# # EventBridge Configuration
+# # ==============================
+
 # resource "aws_cloudwatch_event_bus" "chargebee_retention_event_bus_poc" {
 #   name = "chargebee_retention_event_bus_poc"
 # }
 
+# # Log group for EventBridge
 # resource "aws_cloudwatch_log_group" "chargebee_retention_event_bus_logs_poc" {
 #   name              = "/aws/events/chargebee_retention_event_bus_poc"
 #   retention_in_days = 30
 # }
 
-# # IAM Role for API Gateway to EventBridge
-# resource "aws_iam_role" "chargebee_retention_api_gateway_eventbridge_role_poc" {
-#   name                 = "chargebee_retention_api_gateway_eventbridge_role_poc"
-#   # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-
+# # IAM Role for EventBridge logging to CloudWatch
+# resource "aws_iam_role" "chargebee_retention_eventbridge_logs_role_poc" {
+#   name = "chargebee_retention_eventbridge_logs_role_poc"
 
 #   assume_role_policy = jsonencode({
 #     Version = "2012-10-17",
@@ -51,214 +93,113 @@
 #       Action = "sts:AssumeRole",
 #       Effect = "Allow",
 #       Principal = {
-#         Service = "apigateway.amazonaws.com"
+#         Service = "events.amazonaws.com"
 #       }
 #     }]
 #   })
 # }
 
-# resource "aws_iam_role_policy" "chargebee_retention_api_gateway_eventbridge_policy_poc" {
-#   name = "chargebee_retention_api_gateway_eventbridge_policy_poc"
-#   role = aws_iam_role.chargebee_retention_api_gateway_eventbridge_role_poc.id
+# resource "aws_iam_role_policy" "eventbridge_cloudwatch_logs_policy" {
+#   name = "chargebee_retention_eventbridge_logs_policy"
+#   role = aws_iam_role.chargebee_retention_eventbridge_logs_role_poc.id
 
 #   policy = jsonencode({
 #     Version = "2012-10-17",
 #     Statement = [{
 #       Action = [
-#         "events:PutEvents"
+#         "logs:CreateLogStream",
+#         "logs:PutLogEvents"
 #       ],
 #       Effect   = "Allow",
-#       Resource = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.arn
+#       Resource = [
+#         aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn,
+#         "${aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn}:*"
+#       ]
 #     }]
 #   })
 # }
 
-# # API Gateway to EventBridge Integration
-# resource "aws_apigatewayv2_integration" "chargebee_retention_integration_poc" {
-#   api_id              = aws_apigatewayv2_api.chargebee_retention_http_api_poc.id
-#   integration_type    = "AWS_PROXY"
-#   integration_subtype = "EventBridge-PutEvents"
-#   request_parameters = {
-#     EventBusName = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
-#     Detail       = "$request.body"
-#     DetailType   = "DefaultEventType"
-#     Source       = "Chargebee Retention"
-#   }
-#   credentials_arn = aws_iam_role.chargebee_retention_api_gateway_eventbridge_role_poc.arn
-# }
-
-# resource "aws_apigatewayv2_route" "chargebee_retention_route_poc" {
-#   api_id    = aws_apigatewayv2_api.chargebee_retention_http_api_poc.id
-#   route_key = "ANY /"
-#   target    = "integrations/${aws_apigatewayv2_integration.chargebee_retention_integration_poc.id}"
-# }
-
-# # IAM Role for EventBridge to Firehose
-# resource "aws_iam_role" "chargebee_retention_eventbridge_firehose_role_poc" {
-#   name                 = "chargebee_retention_eventbridge_firehose_role_poc"
-#  # permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole",
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "events.amazonaws.com"
-#         }
-#       },
-#       {
-#         Action = "sts:AssumeRole",
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "firehose.amazonaws.com"
-#         }
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_role_policy" "chargebee_retention_eventbridge_firehose_policy_poc" {
-#   name = "chargebee_retention_eventbridge_firehose_policy_poc"
-#   role = aws_iam_role.chargebee_retention_eventbridge_firehose_role_poc.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [{
-#       Action = [
-#         "firehose:PutRecord",
-#         "firehose:PutRecordBatch"
-#       ],
-#       Effect   = "Allow",
-#       Resource = aws_kinesis_firehose_delivery_stream.chargebee_retention_firehose_to_s3_poc.arn
-#       },
-#       {
-#         Action = [
-#           "s3:AbortMultipartUpload",
-#           "s3:GetBucketLocation",
-#           "s3:GetObject",
-#           "s3:ListBucket",
-#           "s3:ListBucketMultipartUploads",
-#           "s3:PutObject"
-#         ],
-#         Effect = "Allow",
-#         Resource = [
-#           "arn:aws:s3:::${var.martech_s3_bucket}",
-#           "arn:aws:s3:::${var.martech_s3_bucket}/*"
-#         ]
-#       },
-#       {
-#         Action = [
-#           "logs:PutLogEvents",
-#           "logs:CreateLogStream",
-#           "logs:DescribeLogStreams"
-#         ],
-#         Effect   = "Allow",
-#         Resource = "arn:aws:logs:*:*:*",
-
-#     }]
-#   })
-# }
-
-# # IAM Role for EventBridge to write to CloudWatch Logs
-# resource "aws_iam_role" "chargebee_retention_eventbridge_to_cloudwatch_role_poc" {
-#   name                 = "chargebee_retention_eventbridge_to_cloudwatch_role_poc"
-# #  permissions_boundary = "arn:aws:iam::${var.account_id}:policy/tenant-${var.tenant_name}-boundary"
-
-
-#   assume_role_policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = "sts:AssumeRole",
-#         Effect = "Allow",
-#         Principal = {
-#           Service = "events.amazonaws.com"
-#         }
-#       }
-#     ]
-#   })
-# }
-
-# resource "aws_iam_role_policy" "chargebee_retention_eventbridge_to_cloudwatch_policy_poc" {
-#   name = "chargebee_retention_eventbridge_to_cloudwatch_policy_poc"
-#   role = aws_iam_role.chargebee_retention_eventbridge_to_cloudwatch_role_poc.id
-
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Action = [
-#           "logs:PutLogEvents",
-#           "logs:CreateLogStream",
-#           "logs:DescribeLogStreams"
-
-#         ],
-#         Effect = "Allow",
-#         Resource = [
-#           aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn,
-#           "${aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn}:*"
-#         ]
-#       }
-#     ]
-#   })
-# }
-
-# # EventBridge Rule
-# resource "aws_cloudwatch_event_rule" "chargebee_retention_eventbridge_to_firehose_rule_poc" {
-#   name           = "chargebee_retention-eventbridge-to-firehose-rule_poc"
+# # EventBridge rule to forward events
+# resource "aws_cloudwatch_event_rule" "chargebee_retention_eventbridge_rule_poc" {
+#   name           = "chargebee_retention_eventbridge_rule_poc"
 #   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
 #   event_pattern = jsonencode({
-#     "id" : [{
-#       "exists" : true
+#     "source": ["Chargebee Retention"]
+#   })
+# }
+
+# # EventBridge target for logging
+# resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target_poc" {
+#   rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_rule_poc.name
+#   arn            = aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn
+#   # role_arn       = aws_iam_role.chargebee_retention_eventbridge_logs_role_poc.arn
+#   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
+# }
+
+# # ==============================
+# # Firehose Configuration
+# # ==============================
+
+# # Log group for Firehose
+# resource "aws_cloudwatch_log_group" "chargebee_retention_firehose_logs_poc" {
+#   name              = "/aws/kinesisfirehose/chargebee_retention_firehose_to_s3_poc"
+#   retention_in_days = 30
+# }
+
+# resource "aws_cloudwatch_log_stream" "chargebee_retention_firehose_log_stream_poc" {
+#   name           = "chargebee_retention_firehose_log_stream_poc"
+#   log_group_name = aws_cloudwatch_log_group.chargebee_retention_firehose_logs_poc.name
+# }
+
+# # IAM Role for Firehose
+# resource "aws_iam_role" "chargebee_retention_firehose_role_poc" {
+#   name = "chargebee_retention_firehose_role_poc"
+
+#   assume_role_policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = "sts:AssumeRole",
+#       Effect = "Allow",
+#       Principal = {
+#         Service = "firehose.amazonaws.com"
+#       }
 #     }]
 #   })
 # }
 
-# # EventBridge Target for Firehose
-# resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_firehose_target_poc" {
-#   rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_poc.name
-#   arn            = aws_kinesis_firehose_delivery_stream.chargebee_retention_firehose_to_s3_poc.arn
-#   role_arn       = aws_iam_role.chargebee_retention_eventbridge_firehose_role_poc.arn
-#   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
+# resource "aws_iam_role_policy" "firehose_cloudwatch_policy" {
+#   name = "chargebee_retention_firehose_policy"
+#   role = aws_iam_role.chargebee_retention_firehose_role_poc.id
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [{
+#       Action = [
+#         "logs:PutLogEvents",
+#         "logs:CreateLogStream",
+#         "logs:DescribeLogStreams"
+#       ],
+#       Effect   = "Allow",
+#       Resource = "arn:aws:logs:*:*:*"
+#     }]
+#   })
 # }
 
-# # EventBridge Target for CloudWatch Logs
-# resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target_poc" {
-#   rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_to_firehose_rule_poc.name
-#   arn            = aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn
-#   # role_arn       = aws_iam_role.chargebee_retention_eventbridge_to_cloudwatch_role_poc.arn
-#   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
-#   depends_on     = [aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc]
-# }
-
-# # Firehose Delivery Stream
+# # Firehose delivery stream to S3 with logging
 # resource "aws_kinesis_firehose_delivery_stream" "chargebee_retention_firehose_to_s3_poc" {
 #   name        = "chargebee_retention-firehose-to-s3_poc"
 #   destination = "extended_s3"
 
 #   extended_s3_configuration {
-#     role_arn            = aws_iam_role.chargebee_retention_eventbridge_firehose_role_poc.arn
+#     role_arn            = aws_iam_role.chargebee_retention_firehose_role_poc.arn
 #     bucket_arn          = "arn:aws:s3:::${var.martech_s3_bucket}"
 #     prefix              = "outbounds/chargebee_retention/"
 #     error_output_prefix = "errors/chargebee_retention/"
 
 #     cloudwatch_logging_options {
 #       enabled         = true
-#       log_group_name  = aws_cloudwatch_log_group.chargebee_retention_firehose_to_s3_logs_poc.name
-#       log_stream_name = aws_cloudwatch_log_stream.chargebee_retention_firehose_to_s3_log_stream_poc.name
+#       log_group_name  = aws_cloudwatch_log_group.chargebee_retention_firehose_logs_poc.name
+#       log_stream_name = aws_cloudwatch_log_stream.chargebee_retention_firehose_log_stream_poc.name
 #     }
 #   }
-# }
-
-# resource "aws_cloudwatch_log_group" "chargebee_retention_firehose_to_s3_logs_poc" {
-#   name              = "/aws/kinesisfirehose/chargebee_retention_firehose_to_s3_poc"
-#   retention_in_days = 30
-# }
-
-# resource "aws_cloudwatch_log_stream" "chargebee_retention_firehose_to_s3_log_stream_poc" {
-#   name           = "chargebee_retention_firehose_to_s3_log_stream_poc"
-#   log_group_name = aws_cloudwatch_log_group.chargebee_retention_firehose_to_s3_logs_poc.name
 # }
