@@ -132,7 +132,7 @@ resource "aws_cloudwatch_event_rule" "chargebee_retention_eventbridge_rule_poc" 
 resource "aws_cloudwatch_event_target" "chargebee_retention_eventbridge_to_log_target_poc" {
   rule           = aws_cloudwatch_event_rule.chargebee_retention_eventbridge_rule_poc.name
   arn            = aws_cloudwatch_log_group.chargebee_retention_event_bus_logs_poc.arn
-  role_arn       = aws_iam_role.chargebee_retention_eventbridge_logs_role_poc.arn
+  # role_arn       = aws_iam_role.chargebee_retention_eventbridge_logs_role_poc.arn
   event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
 }
 
