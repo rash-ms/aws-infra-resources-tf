@@ -48,7 +48,7 @@ resource "aws_cloudwatch_log_group" "chargebee_retention_event_bus_logs_poc" {
 # }
 
 resource "aws_cloudwatch_event_permission" "allow_apigateway_to_eventbridge" {
-  event_bus_name = aws_cloudwatch_event_bus.event_bus.name
+  event_bus_name = aws_cloudwatch_event_bus.chargebee_retention_event_bus_poc.name
   principal      = "*" # Allow all principals but restrict via conditions
   action         = "events:PutEvents"
   statement_id   = "AllowApiGatewayToPutEvents"
