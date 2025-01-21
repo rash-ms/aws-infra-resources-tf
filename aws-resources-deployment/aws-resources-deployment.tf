@@ -1,5 +1,5 @@
 module "aws-s3-bucket" {
-  source = "../aws-resources-deployment/aws-s3-bucket/"
+  source = "././aws-resources-deployment/aws-s3-bucket/"
 }
 
 # module "aws-apigateway-s3" {
