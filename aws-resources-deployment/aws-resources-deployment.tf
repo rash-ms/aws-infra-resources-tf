@@ -1,4 +1,4 @@
-module "aws-s3-bucket" {
+module "iam_deployment" {
   source = "../aws-resources-infra/aws-s3-bucket"
 }
 
