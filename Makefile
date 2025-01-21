@@ -10,7 +10,7 @@ python_exec=$(shell command -v python3)
 
 # <Recipes>
 
-TERRAFORM_DIR = ./aws-deployment-workspace
+TERRAFORM_DIR = ./aws-resources-deployment
 
 auth:
 		saml2aws login
@@ -51,10 +51,10 @@ destroy:
 
 # Linting for Terraform
 tf_lint_with_write:		
-		terraform fmt -recursive -diff=true -write=true ./aws-data-infrastructure
+		terraform fmt -recursive -diff=true -write=true ./aws-resources-infra
 
 tf_lint_without_write:
-		terraform fmt -recursive -diff=true -write=false ./aws-data-infrastructure
+		terraform fmt -recursive -diff=true -write=false ./aws-resources-infra
 
 # Python dependencies installation
 install_python_deps:
