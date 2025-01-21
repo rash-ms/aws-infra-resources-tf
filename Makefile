@@ -10,7 +10,7 @@ python_exec=$(shell command -v python3)
 
 # <Recipes>
 
-TERRAFORM_DIR = ../aws-resources-deployment
+TERRAFORM_DIR = ./aws-resources-deployment
 
 auth:
 		saml2aws login
