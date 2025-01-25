@@ -1,0 +1,61 @@
+{
+    "type": "object",
+    "properties": {
+        "subscription_id": { "type": "string" },
+        "customer_id": { "type": "string" },
+        "order_id": { "type": "string" },
+        "app_id": { "type": "string" },
+        "customer_email": { "type": "string"},
+        "status": { "type": "string" },
+        "last_payment_status": { "type": ["string", "null"] },
+        "next_billing_date": { "type": ["string", "null"]},
+        "delivery_price_amount": { "type": ["string", "null"] },
+        "currency_code": { "type": "string" },
+        "note": { "type": ["string", "null"] },
+        "customer_amount_spent": { "type": "string" },
+        "order_name": { "type": "string" },
+        "cancelled_at": { "type": ["string", "null"]},
+        "cancel_reason": { "type": ["string", "null"] },
+        "customer_payment_id": { "type": "string" },
+        "revoked_reason": { "type": ["string", "null"] },
+        "discounts": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "discount_id": { "type": ["string", "null"] },
+                    "title": { "type": ["string", "null"] },
+                    "type": { "type": ["string", "null"] },
+                    "target_type": { "type": ["string", "null"] },
+                    "recurring_cycle_limit": { "type": ["string", "null"] },
+                    "usage_count": { "type": ["integer", "null"] },
+                    "discount_rejection_reason": { "type": ["string", "null"] }
+                }
+            }
+        },
+        "lines": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "line_id": { "type": "string" },
+                    "title": { "type": "string" },
+                    "quantity": { "type": "integer" },
+                    "current_price": { "type": "string" },
+                    "line_discounted_price": { "type": "string" },
+                    "requires_shipping": { "type": "boolean" },
+                    "selling_plan_name": { "type": ["string", "null"] },
+                    "sku": { "type": ["string", "null"] },
+                    "taxable": { "type": "boolean" },
+                    "variant_id": { "type": "string" },
+                    "variant_title": { "type": ["string", "null"] }
+                }
+            }
+        },
+        "created_at": { "type": "string"},
+        "update_at": { "type": "string"},
+        "event_type": { "type": "string", "enum": ["subscription_created", "subscription_updated"] }
+    },
+    "required": ["subscription_id", "customer_id", "order_id", "app_id", "customer_email"],
+    "additionalProperties": true
+}

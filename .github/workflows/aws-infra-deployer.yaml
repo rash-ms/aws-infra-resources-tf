@@ -1,0 +1,23 @@
+name: aws-tenant-infra
+
+on:
+  push:
+    paths:
+    - '.github/workflows/aws-tenant-infra.yaml'
+    - '.infras/**'
+
+
+jobs:
+  infra-resources-nonprod:
+    uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.0.0
+    with:
+      version: 1.2.6
+      environment_plan: infra-resources-nonprod-protected
+      environment_apply: infra-resources-nonprod-protected
+      infra_dir: infra-resources-nonprod
+      working_dir: infras
+      aws_default_region: us-east-1
+      main_branch: main
+    secrets:
+      account_id:  ${{ secrets.ACCOUNT_ID }}
+      role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
