@@ -1,10 +1,10 @@
-provider "aws" {
-  alias  = "dev"
-  region = "us-east-1"
-  assume_role {
-    role_arn = "arn:aws:iam::022499035350:role/byt-internal-workspace-dev-role"
-  }
-}
+# provider "aws" {
+#   alias  = "dev"
+#   region = "us-east-1"
+#   assume_role {
+#     role_arn = "arn:aws:iam::022499035350:role/byt-internal-workspace-dev-role"
+#   }
+# }
 
 # provider "aws" {
 #   alias  = "prod"
