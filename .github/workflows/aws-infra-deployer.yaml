@@ -1,15 +1,17 @@
-name: aws-tenant-infra
-
+name: aws-infra-deployer
 on:
   push:
     paths:
-    - '.github/workflows/aws-tenant-infra.yaml'
+    - '.github/workflows/aws-infra-deployer.yaml'
     - '.infras/**'
 
 
 jobs:
   infra-resources-nonprod:
     uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.0.0
+    permissions:
+      id-token: write  
+      contents: read   
     with:
       version: 1.2.6
       environment_plan: infra-resources-nonprod-protected
@@ -21,3 +23,4 @@ jobs:
     secrets:
       account_id:  ${{ secrets.ACCOUNT_ID }}
       role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
+      
