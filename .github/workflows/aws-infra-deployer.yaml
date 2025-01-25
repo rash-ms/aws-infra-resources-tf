@@ -9,6 +9,9 @@ on:
 jobs:
   infra-resources-nonprod:
     uses: rash-ms/planet-workflow/.github/workflows/lit-terraform.yml@1.0.0
+    permissions:
+      id-token: write  
+      contents: read   
     with:
       version: 1.2.6
       environment_plan: infra-resources-nonprod-protected
