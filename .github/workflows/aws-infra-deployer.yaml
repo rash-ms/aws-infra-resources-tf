@@ -1,9 +1,8 @@
-name: aws-tenant-infra
-
+name: aws-infra-deployer
 on:
   push:
     paths:
-    - '.github/workflows/aws-tenant-infra.yaml'
+    - '.github/workflows/aws-infra-deployer.yaml'
     - '.infras/**'
 
 
@@ -21,3 +20,4 @@ jobs:
     secrets:
       account_id:  ${{ secrets.ACCOUNT_ID }}
       role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
+      
