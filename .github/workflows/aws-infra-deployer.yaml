@@ -21,8 +21,3 @@ jobs:
     secrets:
       account_id:  ${{ secrets.ACCOUNT_ID }}
       role_to_assume: ${{ secrets.ROLE_TO_ASSUME }}
-  
-
-
-
-    
